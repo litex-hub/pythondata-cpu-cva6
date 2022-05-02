@@ -70,13 +70,12 @@ module cva6_wrapper (
     output   logic                          RREADY_o   ,
 
     // common part
-    // input logic      trst_n      ,
+    input logic      trst_n      ,
     input  logic        tck         ,
     input  logic        tms         ,
     input  logic        tdi         ,
     output wire         tdo         ,
-    input  logic        rx          ,
-    output logic        tx
+    output wire         tdo_oe         
 );
 
 `AXI_TYPEDEF_ALL(axi_slave,
@@ -192,7 +191,7 @@ dmi_jtag i_dmi_jtag (
     .trst_ni              ( trst_n ),
     .td_i                 ( tdi    ),
     .td_o                 ( tdo    ),
-    .tdo_oe_o             (        )
+    .tdo_oe_o             ( tdo_oe_o )
 );
 
 ariane_axi::req_t    dm_axi_m_req;
