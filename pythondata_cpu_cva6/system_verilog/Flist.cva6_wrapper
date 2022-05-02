@@ -28,6 +28,8 @@ ${CVA6_REPO_DIR}/corev_apu/rv_plic/rtl/rv_plic_target.sv
 +incdir+${CVA6_REPO_DIR}/corev_apu/register_interface/include/
 +incdir+${CVA6_REPO_DIR}/cva6_wrapper
 
+${CVA6_REPO_DIR}/corev_apu/register_interface/src/reg_intf.sv
+
 ${CVA6_REPO_DIR}/cva6_wrapper/cva6_wrapper_pkg.sv
 ${CVA6_REPO_DIR}/cva6_wrapper/cva6_wrapper.sv
 

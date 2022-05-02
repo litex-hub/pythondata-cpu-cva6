@@ -3,6 +3,8 @@
 `include "register_interface/typedef.svh"
 `include "register_interface/assign.svh"
 
+import cva6_wrapper_pkg::*;
+
 module cva6_wrapper (
     input  logic         clk_i   ,
     input  logic         rst_n  ,
@@ -143,7 +145,7 @@ assign addr_map = '{
 };
 
 localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
-  NoSlvPorts:         NrSlaves,
+  NoSlvPorts:         NBSlave,
   NoMstPorts:         NBMaster,
   MaxMstTrans:        1, // Probably requires update
   MaxSlvTrans:        1, // Probably requires update
@@ -154,7 +156,7 @@ localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
   UniqueIds:          1'b0,
   AxiAddrWidth:       AxiAddrWidth,
   AxiDataWidth:       AxiDataWidth,
-  NoAddrRules:        NrSlaves
+  NoAddrRules:        NBSlave
 };
 
 axi_xbar_intf #(
@@ -191,12 +193,11 @@ dmi_jtag i_dmi_jtag (
     .trst_ni              ( trst_n ),
     .td_i                 ( tdi    ),
     .td_o                 ( tdo    ),
-    .tdo_oe_o             ( tdo_oe_o )
+    .tdo_oe_o             ( tdo_oe )
 );
 
 ariane_axi::req_t    dm_axi_m_req;
 ariane_axi::resp_t   dm_axi_m_resp;
-
 
 logic                      dm_slave_req;
 logic                      dm_slave_we;
@@ -613,9 +614,6 @@ clint #(
     // PLIC
     // ---------------
 
-    // Unused interrupt sources
-    assign irq_sources[cva6_wrapper_pkg::NumSources-1:7] = '0;
-
     REG_BUS #(
         .ADDR_WIDTH ( 32 ),
         .DATA_WIDTH ( 32 )
@@ -722,15 +720,17 @@ clint #(
     plic_top #(
       .N_SOURCE    ( cva6_wrapper_pkg::NumSources  ),
       .N_TARGET    ( cva6_wrapper_pkg::NumTargets  ),
-      .MAX_PRIO    ( cva6_wrapper_pkg::MaxPriority )
+      .MAX_PRIO    ( cva6_wrapper_pkg::MaxPriority ),
+      .reg_req_t   ( plic_req_t              ),
+      .reg_rsp_t   ( plic_rsp_t              )
     ) i_plic (
       .clk_i,
-      .rst_ni,
+      .rst_ni (ndmreset_n),
       .req_i         ( plic_req    ),
-      .resp_o        ( plic_resp   ),
+      .resp_o        ( plic_rsp   ),
       .le_i          ( '0          ), // 0:level 1:edge
       .irq_sources_i ( irq_sources ),
-      .eip_targets_o ( irq_o       )
+      .eip_targets_o ( irq       )
     );
 
 // ---------------

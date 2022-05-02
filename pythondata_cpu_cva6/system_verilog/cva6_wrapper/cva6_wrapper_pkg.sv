@@ -55,7 +55,7 @@ package cva6_wrapper_pkg;
     // idempotent region
     NrNonIdempotentRules:  1,
     NonIdempotentAddrBase: {64'b0},
-    NonIdempotentLength:   {DRAMBase},
+    NonIdempotentLength:   {ExternalBase},
     NrExecuteRegionRules:  2,
     ExecuteRegionAddrBase: {DebugBase, ExternalBase},
     ExecuteRegionLength:   {DebugLength, ExternalLength},
