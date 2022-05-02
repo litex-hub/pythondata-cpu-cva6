@@ -632,7 +632,7 @@ clint #(
         .AXI4_ADDRESS_WIDTH ( AxiAddrWidth  ),
         .AXI4_RDATA_WIDTH   ( AxiDataWidth  ),
         .AXI4_WDATA_WIDTH   ( AxiDataWidth  ),
-        .AXI4_ID_WIDTH      ( AxiIdWidth    ),
+        .AXI4_ID_WIDTH      ( AxiIdWidthSlaves    ),
         .AXI4_USER_WIDTH    ( AxiUserWidth  ),
         .BUFF_DEPTH_SLAVE   ( 2             ),
         .APB_ADDR_WIDTH     ( 32            )

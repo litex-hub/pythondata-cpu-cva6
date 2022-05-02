@@ -84,7 +84,7 @@ endmodule
 
 `ifndef SYNTHESIS
 module tc_clk_delay #(
-  parameter int unsigned Delay = 300ps
+  parameter int unsigned Delay = 300
 ) (
   input  logic in_i,
   output logic out_o
@@ -92,7 +92,7 @@ module tc_clk_delay #(
 
 // pragma translate_off
 `ifndef VERILATOR
-  assign #(Delay) out_o = in_i;
+  assign #(Delay*1ps) out_o = in_i;
 `endif
 // pragma translate_on
 
