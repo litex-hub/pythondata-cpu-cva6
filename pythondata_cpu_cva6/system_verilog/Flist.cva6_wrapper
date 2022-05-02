@@ -21,3 +21,7 @@ corev_apu/rv_plic/rtl/rv_plic.sv
 corev_apu/rv_plic/rtl/rv_plic_target.sv
 corev_apu/rv_plic/rtl/tlul_pkg.sv
 corev_apu/rv_plic/rtl/top_pkg.sv
+
+cva6_wrapper/cva6_wrapper_pkg.sv
+cva6_wrapper/cva6_wrapper.sv
+
