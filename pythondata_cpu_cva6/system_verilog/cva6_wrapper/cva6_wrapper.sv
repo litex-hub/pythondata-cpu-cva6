@@ -1,3 +1,8 @@
+`include "axi/typedef.svh"
+`include "axi/assign.svh"
+`include "register_interface/typedef.svh"
+`include "register_interface/assign.svh"
+
 module cva6_wrapper (
     input  logic         clk_i   ,
     input  logic         rst_n  ,
@@ -7,8 +12,8 @@ module cva6_wrapper (
     // AXI i/f
     
     //AXI write address bus ------------------------------------
-    output  logic [AXI4_ID_WIDTH-1:0]       AWID_o     ,
-    output  logic [AXI4_ADDRESS_WIDTH-1:0]  AWADDR_o   ,
+    output  logic [AxiIdWidthSlaves-1:0]       AWID_o     ,
+    output  logic [AxiAddrWidth-1:0]  AWADDR_o   ,
     output  logic [ 7:0]                    AWLEN_o    ,
     output  logic [ 2:0]                    AWSIZE_o   ,
     output  logic [ 1:0]                    AWBURST_o  ,
@@ -16,32 +21,32 @@ module cva6_wrapper (
     output  logic [ 3:0]                    AWCACHE_o  ,
     output  logic [ 2:0]                    AWPROT_o   ,
     output  logic [ 3:0]                    AWREGION_o ,
-    output  logic [ AXI4_USER_WIDTH-1:0]    AWUSER_o   ,
+    output  logic [ AxiUserWidth-1:0]    AWUSER_o   ,
     output  logic [ 3:0]                    AWQOS_o    ,
     output  logic                           AWVALID_o  ,
     input logic                             AWREADY_i  ,
     // ---------------------------------------------------------
 
     //AXI write data bus ---------------------------------------
-    output  logic [AXI_NUMBYTES-1:0][7:0]   WDATA_o    ,
-    output  logic [AXI_NUMBYTES-1:0]        WSTRB_o    ,
+    output  logic [AxiDataWidth-1:0]   WDATA_o    ,
+    output  logic [AxiDataWidth/8-1:0]        WSTRB_o    ,
     output  logic                           WLAST_o    ,
-    output  logic [AXI4_USER_WIDTH-1:0]     WUSER_o    ,
+    output  logic [AxiUserWidth-1:0]     WUSER_o    ,
     output  logic                           WVALID_o   ,
     input logic                             WREADY_i   ,
     // ---------------------------------------------------------
 
     //AXI write response bus -----------------------------------
-    input logic   [AXI4_ID_WIDTH-1:0]       BID_i      ,
+    input logic   [AxiIdWidthSlaves-1:0]       BID_i      ,
     input logic   [ 1:0]                    BRESP_i    ,
     input logic                             BVALID_i   ,
-    input logic   [AXI4_USER_WIDTH-1:0]     BUSER_i    ,
+    input logic   [AxiUserWidth-1:0]     BUSER_i    ,
     output  logic                           BREADY_o   ,
     // ---------------------------------------------------------
 
     //AXI read address bus -------------------------------------
-    output  logic [AXI4_ID_WIDTH-1:0]       ARID_o     ,
-    output  logic [AXI4_ADDRESS_WIDTH-1:0]  ARADDR_o   ,
+    output  logic [AxiIdWidthSlaves-1:0]       ARID_o     ,
+    output  logic [AxiAddrWidth-1:0]  ARADDR_o   ,
     output  logic [ 7:0]                    ARLEN_o    ,
     output  logic [ 2:0]                    ARSIZE_o   ,
     output  logic [ 1:0]                    ARBURST_o  ,
@@ -49,18 +54,18 @@ module cva6_wrapper (
     output  logic [ 3:0]                    ARCACHE_o  ,
     output  logic [ 2:0]                    ARPROT_o   ,
     output  logic [ 3:0]                    ARREGION_o ,
-    output  logic [ AXI4_USER_WIDTH-1:0]    ARUSER_o   ,
+    output  logic [ AxiUserWidth-1:0]    ARUSER_o   ,
     output  logic [ 3:0]                    ARQOS_o    ,
     output  logic                           ARVALID_o  ,
     input logic                             ARREADY_i  ,
     // ---------------------------------------------------------
 
     //AXI read data bus ----------------------------------------
-    input  logic [AXI4_ID_WIDTH-1:0]        RID_i      ,
-    input  logic [AXI4_RDATA_WIDTH-1:0]     RDATA_i    ,
+    input  logic [AxiIdWidthSlaves-1:0]        RID_i      ,
+    input  logic [AxiDataWidth-1:0]     RDATA_i    ,
     input  logic [ 1:0]                     RRESP_i    ,
     input  logic                            RLAST_i    ,
-    input  logic [AXI4_USER_WIDTH-1:0]      RUSER_i    ,
+    input  logic [AxiUserWidth-1:0]      RUSER_i    ,
     input  logic                            RVALID_i   ,
     output   logic                          RREADY_o   ,
 
@@ -73,16 +78,6 @@ module cva6_wrapper (
     input  logic        rx          ,
     output logic        tx
 );
-
-// 24 MByte in 8 byte words
-localparam NumWords = (24 * 1024 * 1024) / 8;
-localparam NBSlave = 2; // debug, cva6
-localparam NBMaster = 4; // debug, plic, clint, external
-localparam AxiAddrWidth = 64;
-localparam AxiDataWidth = 64;
-localparam AxiIdWidthMaster = $clog2(NBMaster);
-localparam AxiIdWidthSlaves = AxiIdWidthMaster + $clog2(NBSlave);
-localparam AxiUserWidth = 1;
 
 `AXI_TYPEDEF_ALL(axi_slave,
                  logic [    AxiAddrWidth-1:0],
@@ -716,23 +711,19 @@ clint #(
         .reg_o     ( reg_bus      )
     );
 
-    reg_intf::reg_intf_resp_d32 plic_resp;
-    reg_intf::reg_intf_req_a32_d32 plic_req;
+    // define reg type according to REG_BUS above
+    `REG_BUS_TYPEDEF_ALL(plic, logic[31:0], logic[31:0], logic[3:0])
+    plic_req_t plic_req;
+    plic_rsp_t plic_rsp;
 
-    assign plic_req.addr  = reg_bus.addr;
-    assign plic_req.write = reg_bus.write;
-    assign plic_req.wdata = reg_bus.wdata;
-    assign plic_req.wstrb = reg_bus.wstrb;
-    assign plic_req.valid = reg_bus.valid;
-
-    assign reg_bus.rdata = plic_resp.rdata;
-    assign reg_bus.error = plic_resp.error;
-    assign reg_bus.ready = plic_resp.ready;
+    // assign REG_BUS.out to (req_t, rsp_t) pair
+    `REG_BUS_ASSIGN_TO_REQ(plic_req, reg_bus)
+    `REG_BUS_ASSIGN_FROM_RSP(reg_bus, plic_rsp)
 
     plic_top #(
-      .N_SOURCE    ( ariane_soc::NumSources  ),
-      .N_TARGET    ( ariane_soc::NumTargets  ),
-      .MAX_PRIO    ( ariane_soc::MaxPriority )
+      .N_SOURCE    ( cva6_wrapper_pkg::NumSources  ),
+      .N_TARGET    ( cva6_wrapper_pkg::NumTargets  ),
+      .MAX_PRIO    ( cva6_wrapper_pkg::MaxPriority )
     ) i_plic (
       .clk_i,
       .rst_ni,

@@ -15,11 +15,14 @@ package cva6_wrapper_pkg;
   localparam int unsigned NumSources = 32;
   localparam int unsigned MaxPriority = 7;
 
-  localparam NrSlaves = 2; // actually masters, but slaves on the crossbar
-
-  // 4 is recommended by AXI standard, so lets stick to it, do not change
-  localparam IdWidth   = 4;
-  localparam IdWidthSlave = IdWidth + $clog2(NrSlaves);
+  // 24 MByte in 8 byte words
+  localparam NBSlave = 2; // debug, cva6
+  localparam NBMaster = 4; // debug, plic, clint, external
+  localparam AxiAddrWidth = 64;
+  localparam AxiDataWidth = 64;
+  localparam AxiIdWidthMaster = $clog2(NBMaster);
+  localparam AxiIdWidthSlaves = AxiIdWidthMaster + $clog2(NBSlave);
+  localparam AxiUserWidth = 1;
 
   typedef enum int unsigned {
     External = 0,
