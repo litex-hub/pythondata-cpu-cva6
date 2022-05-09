@@ -62,7 +62,7 @@ package cva6_wrapper_pkg;
     // cached region
     NrCachedRegionRules:    1,
     CachedRegionAddrBase:  {ExternalBase},
-    CachedRegionLength:    {ExternalLength},
+    CachedRegionLength:    {64'h7000_0000},
     //  cache config
     Axi64BitCompliant:      1'b1,
     SwapEndianess:          1'b0,

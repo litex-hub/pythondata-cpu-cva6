@@ -77,6 +77,7 @@ ${CVA6_REPO_DIR}/corev_apu/fpga/src/axi_slice/src/axi_w_buffer.sv
 ${CVA6_REPO_DIR}/corev_apu/clint/clint.sv
 ${CVA6_REPO_DIR}/corev_apu/clint/axi_lite_interface.sv
 
+${CVA6_REPO_DIR}/common/submodules/common_cells/src/deprecated/fifo_v1.sv
 ${CVA6_REPO_DIR}/common/submodules/common_cells/src/deprecated/fifo_v2.sv
 ${CVA6_REPO_DIR}/corev_apu/src/tech_cells_generic/src/deprecated/pulp_clk_cells.sv
 ${CVA6_REPO_DIR}/corev_apu/src/tech_cells_generic/src/deprecated/cluster_clk_cells.sv

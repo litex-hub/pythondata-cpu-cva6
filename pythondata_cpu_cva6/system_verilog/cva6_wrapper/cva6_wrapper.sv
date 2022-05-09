@@ -110,6 +110,7 @@ AXI_BUS #(
 
 // disable test-enable
 logic test_en;
+logic ndmreset;
 logic ndmreset_n;
 logic debug_req_irq;
 logic timer_irq;
@@ -130,6 +131,8 @@ logic dmactive;
 // IRQ
 logic [1:0] irq;
 assign test_en    = 1'b0;
+
+assign ndmreset_n = ~ndmreset;
 
 // ---------------
 // AXI Xbar
@@ -224,7 +227,7 @@ dm_top #(
     .clk_i            ( clk_i             ),
     .rst_ni           ( rst_n             ), // PoR
     .testmode_i       ( test_en           ),
-    .ndmreset_o       ( ndmreset_n        ),
+    .ndmreset_o       ( ndmreset          ),
     .dmactive_o       ( dmactive          ), // active debug session
     .debug_req_o      ( debug_req_irq     ),
     .unavailable_i    ( '0                ),
@@ -560,7 +563,7 @@ ariane #(
     .ArianeCfg ( cva6_wrapper_pkg::CVA6Cfg )
 ) i_ariane (
     .clk_i        ( clk_i               ),
-    .rst_ni       ( ndmreset_n          ),
+    .rst_ni       ( rst_n /*ndmreset_n*/          ),
     .boot_addr_i  ( cva6_wrapper_pkg::ExternalBase ),
     .hart_id_i    ( '0                  ),
     .irq_i        ( irq                 ),
@@ -752,8 +755,8 @@ clint #(
     assign master[cva6_wrapper_pkg::External].aw_ready = AWREADY_i;
     assign WDATA_o    = master[cva6_wrapper_pkg::External].w_data;
     assign WSTRB_o    = master[cva6_wrapper_pkg::External].w_strb;
-    assign WLAST_o    = '0;
-    assign WUSER_o    = master[cva6_wrapper_pkg::External].w_last;
+    assign WLAST_o    = master[cva6_wrapper_pkg::External].w_last;
+    assign WUSER_o    = '0;
     assign WVALID_o   = master[cva6_wrapper_pkg::External].w_valid;
     assign master[cva6_wrapper_pkg::External].w_ready = WREADY_i;
     assign master[cva6_wrapper_pkg::External].b_id = BID_i;
