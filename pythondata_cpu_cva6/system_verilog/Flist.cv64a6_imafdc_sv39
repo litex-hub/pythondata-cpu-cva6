@@ -68,6 +68,11 @@ ${CVA6_REPO_DIR}/common/submodules/common_cells/src/shift_reg.sv
 ${CVA6_REPO_DIR}/common/submodules/common_cells/src/unread.sv
 ${CVA6_REPO_DIR}/common/submodules/common_cells/src/popcount.sv
 ${CVA6_REPO_DIR}/common/submodules/common_cells/src/exp_backoff.sv
+${CVA6_REPO_DIR}/common/submodules/common_cells/src/addr_decode.sv
+${CVA6_REPO_DIR}/common/submodules/common_cells/src/spill_register.sv
+${CVA6_REPO_DIR}/common/submodules/common_cells/src/spill_register_flushable.sv
+${CVA6_REPO_DIR}/common/submodules/common_cells/src/stream_register.sv
+${CVA6_REPO_DIR}/common/submodules/common_cells/src/cdc_2phase.sv
 
 // Common Cells for example coprocessor
 ${CVA6_REPO_DIR}/common/submodules/common_cells/src/counter.sv
