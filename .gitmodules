@@ -1,0 +1,54 @@
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/axi_mem_if"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/axi_mem_if
+	url = https://github.com/pulp-platform/axi_mem_if.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/fpga-support"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/fpga-support
+	url = https://github.com/pulp-platform/fpga-support.git
+[submodule "pythondata_cpu_cva6/system_verilog/common/submodules/common_cells"]
+	path = pythondata_cpu_cva6/system_verilog/common/submodules/common_cells
+	url = https://github.com/pulp-platform/common_cells.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/axi"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/axi
+	url = https://github.com/pulp-platform/axi.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/register_interface"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/register_interface
+	url = https://github.com/pulp-platform/register_interface.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/apb_uart"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/apb_uart
+	url = https://github.com/pulp-platform/apb_uart.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/apb_node"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/apb_node
+	url = https://github.com/pulp-platform/apb_node.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/axi2apb"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/axi2apb
+	url = https://github.com/pulp-platform/axi2apb.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/axi_slice"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/axi_slice
+	url = https://github.com/pulp-platform/axi_slice.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/src/tech_cells_generic"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/src/tech_cells_generic
+	url = https://github.com/pulp-platform/tech_cells_generic.git
+[submodule "pythondata_cpu_cva6/system_verilog/core/fpu"]
+	path = pythondata_cpu_cva6/system_verilog/core/fpu
+	url = https://github.com/pulp-platform/fpnew.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/ariane-ethernet"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/ariane-ethernet
+	url = https://github.com/lowRISC/ariane-ethernet.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/src/axi_riscv_atomics"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/src/axi_riscv_atomics
+	url = https://github.com/pulp-platform/axi_riscv_atomics.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/riscv-dbg"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/riscv-dbg
+	url = https://github.com/pulp-platform/riscv-dbg.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/rv_plic"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/rv_plic
+	url = https://github.com/pulp-platform/rv_plic.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/apb_timer"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/fpga/src/apb_timer
+	url = https://github.com/pulp-platform/apb_timer.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/tb/dromajo"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/tb/dromajo
+	url = https://github.com/kabylkas/dromajo.git
+[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/tb/common_verification"]
+	path = pythondata_cpu_cva6/system_verilog/corev_apu/tb/common_verification
+	url = https://github.com/pulp-platform/common_verification.git
