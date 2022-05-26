@@ -4,11 +4,11 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post391"
-version_tuple = (4, 2, 0, 391)
+version_str = "4.2.0.post393"
+version_tuple = (4, 2, 0, 393)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post391")
+    pversion = V("4.2.0.post393")
 except ImportError:
     pass
 
@@ -44,11 +44,11 @@ Date:   Thu May 12 10:46:40 2022 +0200
 """
 
 # Tool version info
-tool_version_str = "0.0.post138"
-tool_version_tuple = (0, 0, 138)
+tool_version_str = "0.0.post140"
+tool_version_tuple = (0, 0, 140)
 try:
     from packaging.version import Version as V
-    ptool_version = V("0.0.post138")
+    ptool_version = V("0.0.post140")
 except ImportError:
     pass
 
