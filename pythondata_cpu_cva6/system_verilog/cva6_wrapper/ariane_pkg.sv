@@ -165,7 +165,7 @@ package ariane_pkg;
     localparam bit RVD = riscv::IS_XLEN64; // Is D extension enabled
 `else
     // Floating-point extensions configuration
-    localparam bit RVF = (riscv::IS_XLEN64 | riscv::IS_XLEN32) & riscv::FPU_EN; // Is F extension enabled for both 32 Bit and 64 bit CPU  
+    localparam bit RVF = (riscv::IS_XLEN64 | riscv::IS_XLEN32) & riscv::FPU_EN; // Is F extension enabled for both 32 Bit and 64 bit CPU
     localparam bit RVD = (riscv::IS_XLEN64 ? 1:0) & riscv::FPU_EN;              // Is D extension enabled for only 64 bit CPU
 `endif
     localparam bit RVA = 1'b1; // Is A extension enabled
@@ -281,6 +281,18 @@ package ariane_pkg;
                                                     | riscv::SSTATUS_SUM
                                                     | riscv::SSTATUS_MXR;
     // ---------------
+    // User bits
+    // ---------------
+
+    localparam FETCH_USER_WIDTH = (cva6_config_pkg::CVA6ConfigFetchUserEn == 0) ? 1: cva6_config_pkg::CVA6ConfigFetchUserWidth;  // Possible cases: between 1 and 64
+    localparam DATA_USER_WIDTH = (cva6_config_pkg::CVA6ConfigDataUserEn == 0) ? 1: cva6_config_pkg::CVA6ConfigDataUserWidth;    // Possible cases: between 1 and 64
+    localparam AXI_USER_WIDTH = DATA_USER_WIDTH > FETCH_USER_WIDTH ? DATA_USER_WIDTH : FETCH_USER_WIDTH;
+    localparam DATA_USER_EN = cva6_config_pkg::CVA6ConfigDataUserEn;
+    localparam FETCH_USER_EN = cva6_config_pkg::CVA6ConfigFetchUserEn;
+    localparam AXI_USER_EN = cva6_config_pkg::CVA6ConfigDataUserEn | cva6_config_pkg::CVA6ConfigFetchUserEn;
+
+
+    // ---------------
     // Fetch Stage
     // ---------------
 
@@ -289,7 +301,7 @@ package ariane_pkg;
     localparam int unsigned FETCH_WIDTH       = 32;
     // maximum instructions we can fetch on one request (we support compressed instructions)
     localparam int unsigned INSTR_PER_FETCH = RVC == 1'b1 ? (FETCH_WIDTH / 16) : 1;
-    localparam int unsigned LOG2_INSTR_PER_FETCH = RVC == 1'b1 ? 1 : $clog2(ariane_pkg::INSTR_PER_FETCH);
+    localparam int unsigned LOG2_INSTR_PER_FETCH = RVC == 1'b1 ? $clog2(ariane_pkg::INSTR_PER_FETCH) : 1;
 
     // Only use struct when signals have same direction
     // exception
@@ -427,17 +439,20 @@ package ariane_pkg;
     localparam int unsigned DCACHE_TAG_WIDTH   = riscv::PLEN - DCACHE_INDEX_WIDTH;
 `else
     // I$
-		localparam int unsigned CONFIG_L1I_SIZE    = 16*1024;
+    localparam int unsigned CONFIG_L1I_SIZE    = 16*1024;
     localparam int unsigned ICACHE_SET_ASSOC   = 4; // Must be between 4 to 64
     localparam int unsigned ICACHE_INDEX_WIDTH = $clog2(CONFIG_L1I_SIZE / ICACHE_SET_ASSOC);  // in bit, contains also offset width
     localparam int unsigned ICACHE_TAG_WIDTH   = riscv::PLEN-ICACHE_INDEX_WIDTH;  // in bit
     localparam int unsigned ICACHE_LINE_WIDTH  = 128; // in bit
+    localparam int unsigned ICACHE_USER_LINE_WIDTH  = (AXI_USER_WIDTH == 1) ? 4 : 128; // in bit
     // D$
-		localparam int unsigned CONFIG_L1D_SIZE    = 32*1024;
-	  localparam int unsigned DCACHE_SET_ASSOC   = 8; // Must be between 4 to 64
+    localparam int unsigned CONFIG_L1D_SIZE    = 32*1024;
+    localparam int unsigned DCACHE_SET_ASSOC   = 8; // Must be between 4 to 64
     localparam int unsigned DCACHE_INDEX_WIDTH = $clog2(CONFIG_L1D_SIZE / DCACHE_SET_ASSOC);  // in bit, contains also offset width
     localparam int unsigned DCACHE_TAG_WIDTH   = riscv::PLEN-DCACHE_INDEX_WIDTH;  // in bit
     localparam int unsigned DCACHE_LINE_WIDTH  = 128; // in bit
+    localparam int unsigned DCACHE_USER_LINE_WIDTH  = (AXI_USER_WIDTH == 1) ? 4 : 128; // in bit
+    localparam int unsigned DCACHE_USER_WIDTH  = DATA_USER_WIDTH;
 `endif
 
     localparam bit CVXIF_PRESENT = cva6_config_pkg::CVA6ConfigCvxifEn;
@@ -574,7 +589,7 @@ package ariane_pkg;
             default: return 1'b0;
         endcase
     endfunction
-    
+
     typedef struct packed {
         logic                           valid;
         logic [riscv::VLEN-1:0]         vaddr;
@@ -703,6 +718,7 @@ package ariane_pkg;
         logic                     ready;                  // icache is ready
         logic                     valid;                  // signals a valid read
         logic [FETCH_WIDTH-1:0]   data;                   // 2+ cycle out: tag
+        logic [FETCH_USER_WIDTH-1:0] user;                // User bits
         logic [riscv::VLEN-1:0]   vaddr;                  // virtual address out
         exception_t               ex;                     // we've encountered an exception
     } icache_dreq_o_t;
@@ -725,11 +741,12 @@ package ariane_pkg;
         logic [63:0] result; // sign-extended, result
     } amo_resp_t;
 
-    // D$ data requests    
+    // D$ data requests
     typedef struct packed {
         logic [DCACHE_INDEX_WIDTH-1:0] address_index;
         logic [DCACHE_TAG_WIDTH-1:0]   address_tag;
         riscv::xlen_t                  data_wdata;
+        logic [DCACHE_USER_WIDTH-1:0]  data_wuser;
         logic                          data_req;
         logic                          data_we;
         logic [(riscv::XLEN/8)-1:0]    data_be;
@@ -742,6 +759,7 @@ package ariane_pkg;
         logic                          data_gnt;
         logic                          data_rvalid;
         riscv::xlen_t                  data_rdata;
+        logic [DCACHE_USER_WIDTH-1:0]  data_ruser;
     } dcache_req_o_t;
 
     // ----------------------
@@ -828,7 +846,7 @@ package ariane_pkg;
         endcase
         return 8'b0;
     endfunction
-    
+
     function automatic logic [3:0] be_gen_32(logic [1:0] addr, logic [1:0] size);
         case (size)
             2'b10: begin
