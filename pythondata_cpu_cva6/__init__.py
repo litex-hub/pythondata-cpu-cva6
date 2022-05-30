@@ -4,42 +4,36 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post395"
-version_tuple = (4, 2, 0, 395)
+version_str = "4.2.0.post396"
+version_tuple = (4, 2, 0, 396)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post395")
+    pversion = V("4.2.0.post396")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post253"
-data_version_tuple = (4, 2, 0, 253)
+data_version_str = "4.2.0.post254"
+data_version_tuple = (4, 2, 0, 254)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post253")
+    pdata_version = V("4.2.0.post254")
 except ImportError:
     pass
-data_git_hash = "75807530f26ba9a0ca501e9d3a6575ec375ed7ab"
-data_git_describe = "v4.2.0-253-g75807530"
+data_git_hash = "909d85a56cc5ace65765a63d7ed56b7ac2026f99"
+data_git_describe = "v4.2.0-254-g909d85a5"
 data_git_msg = """\
-commit 75807530f26ba9a0ca501e9d3a6575ec375ed7ab
-Author: Steffen Persvold <spersvold@users.noreply.github.com>
-Date:   Thu May 12 10:46:40 2022 +0200
+commit 909d85a56cc5ace65765a63d7ed56b7ac2026f99
+Author: Guillaume Chauvon <94678394+Gchauvon@users.noreply.github.com>
+Date:   Mon May 30 22:50:50 2022 +0200
 
-    Add support for "high" counter CSRs in 32-bit mode (#847)
+    Fix tc_srams paths (#892)
     
-    * Add support for "high" counter CSRs in 32-bit mode
+    * cva6_synth.tcl: fix set_input_delay and set_output_delay tc_sram paths
+    * ariane_tb.cpp;.sv: [Fix tc_srams] change path for user memory preload
     
-    In 32bit mode MCYCLEH, MINSTRETH, CYCLEH, TIMEH and INSTRETH are
-    used to return the most significant 32-bit value of the counters
-    which are now always 64-bit wide.
-    
-    Signed-off-by: Steffen Persvold <spersvold@gmail.com>
-    
-    * Enable writing of MCYCLEH and MINSTRETH CSRs
-    
-    Signed-off-by: Steffen Persvold <spersvold@gmail.com>
+    Signed-off-by: Guillaume Chauvon <guillaume.chauvon@thalesgroup.com>
+    Co-authored-by: Jean-Roch Coulon <jean-roch.coulon@thalesgroup.com>
 
 """
 
