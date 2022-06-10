@@ -4,36 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post396"
-version_tuple = (4, 2, 0, 396)
+version_str = "4.2.0.post397"
+version_tuple = (4, 2, 0, 397)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post396")
+    pversion = V("4.2.0.post397")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post254"
-data_version_tuple = (4, 2, 0, 254)
+data_version_str = "4.2.0.post255"
+data_version_tuple = (4, 2, 0, 255)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post254")
+    pdata_version = V("4.2.0.post255")
 except ImportError:
     pass
-data_git_hash = "909d85a56cc5ace65765a63d7ed56b7ac2026f99"
-data_git_describe = "v4.2.0-254-g909d85a5"
+data_git_hash = "38c58e50e85416a08bd659ba93287744313331ac"
+data_git_describe = "v4.2.0-255-g38c58e50"
 data_git_msg = """\
-commit 909d85a56cc5ace65765a63d7ed56b7ac2026f99
-Author: Guillaume Chauvon <94678394+Gchauvon@users.noreply.github.com>
-Date:   Mon May 30 22:50:50 2022 +0200
+commit 38c58e50e85416a08bd659ba93287744313331ac
+Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
+Date:   Fri Jun 10 14:15:21 2022 +0200
 
-    Fix tc_srams paths (#892)
-    
-    * cva6_synth.tcl: fix set_input_delay and set_output_delay tc_sram paths
-    * ariane_tb.cpp;.sv: [Fix tc_srams] change path for user memory preload
-    
-    Signed-off-by: Guillaume Chauvon <guillaume.chauvon@thalesgroup.com>
-    Co-authored-by: Jean-Roch Coulon <jean-roch.coulon@thalesgroup.com>
+    Add cv32a60x platform configuration (#907)
 
 """
 
