@@ -4,30 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post397"
-version_tuple = (4, 2, 0, 397)
+version_str = "4.2.0.post398"
+version_tuple = (4, 2, 0, 398)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post397")
+    pversion = V("4.2.0.post398")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post255"
-data_version_tuple = (4, 2, 0, 255)
+data_version_str = "4.2.0.post256"
+data_version_tuple = (4, 2, 0, 256)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post255")
+    pdata_version = V("4.2.0.post256")
 except ImportError:
     pass
-data_git_hash = "38c58e50e85416a08bd659ba93287744313331ac"
-data_git_describe = "v4.2.0-255-g38c58e50"
+data_git_hash = "d315ddd0f1be27c1b3f27eb0b8daf471a952299a"
+data_git_describe = "v4.2.0-256-gd315ddd0"
 data_git_msg = """\
-commit 38c58e50e85416a08bd659ba93287744313331ac
-Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
-Date:   Fri Jun 10 14:15:21 2022 +0200
+commit d315ddd0f1be27c1b3f27eb0b8daf471a952299a
+Author: Yannick Casamatta <yannick.casamatta@thalesgroup.com>
+Date:   Thu Jun 16 10:37:34 2022 +0200
 
-    Add cv32a60x platform configuration (#907)
+    gitlab-ci: add workflow for github pull request (#919)
 
 """
 
