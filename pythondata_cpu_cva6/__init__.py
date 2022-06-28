@@ -4,30 +4,34 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post401"
-version_tuple = (4, 2, 0, 401)
+version_str = "4.2.0.post402"
+version_tuple = (4, 2, 0, 402)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post401")
+    pversion = V("4.2.0.post402")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post259"
-data_version_tuple = (4, 2, 0, 259)
+data_version_str = "4.2.0.post260"
+data_version_tuple = (4, 2, 0, 260)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post259")
+    pdata_version = V("4.2.0.post260")
 except ImportError:
     pass
-data_git_hash = "767c465cfbac8e5e9112e3b067199963d6a89cfd"
-data_git_describe = "v4.2.0-259-g767c465c"
+data_git_hash = "a9c7b4f1e127688b3e8de03a54a31abcdae2bda4"
+data_git_describe = "v4.2.0-260-ga9c7b4f1"
 data_git_msg = """\
-commit 767c465cfbac8e5e9112e3b067199963d6a89cfd
-Author: Mike Thompson <mike@openhwgroup.org>
-Date:   Tue Jun 28 08:04:06 2022 -0400
+commit a9c7b4f1e127688b3e8de03a54a31abcdae2bda4
+Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
+Date:   Tue Jun 28 22:15:55 2022 +0200
 
-    Introduce CV32A60X as first release (#916)
+    Cvvdev/dev/formating4 (#920)
+    
+    Several format cleanings:
+    - split load_store_unit.sv to create lsu_bypass.sv
+    - add several "begin" and "end"
 
 """
 
