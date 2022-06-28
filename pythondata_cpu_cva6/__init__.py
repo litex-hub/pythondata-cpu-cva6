@@ -4,30 +4,32 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post398"
-version_tuple = (4, 2, 0, 398)
+version_str = "4.2.0.post400"
+version_tuple = (4, 2, 0, 400)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post398")
+    pversion = V("4.2.0.post400")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post256"
-data_version_tuple = (4, 2, 0, 256)
+data_version_str = "4.2.0.post258"
+data_version_tuple = (4, 2, 0, 258)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post256")
+    pdata_version = V("4.2.0.post258")
 except ImportError:
     pass
-data_git_hash = "d315ddd0f1be27c1b3f27eb0b8daf471a952299a"
-data_git_describe = "v4.2.0-256-gd315ddd0"
+data_git_hash = "66f158dea03328bc3aefb0177293ca52d4235940"
+data_git_describe = "v4.2.0-258-g66f158de"
 data_git_msg = """\
-commit d315ddd0f1be27c1b3f27eb0b8daf471a952299a
-Author: Yannick Casamatta <yannick.casamatta@thalesgroup.com>
-Date:   Thu Jun 16 10:37:34 2022 +0200
+commit 66f158dea03328bc3aefb0177293ca52d4235940
+Author: Guillaume Chauvon <94678394+Gchauvon@users.noreply.github.com>
+Date:   Tue Jun 28 09:59:51 2022 +0200
 
-    gitlab-ci: add workflow for github pull request (#919)
+    FPGA: Add scripts to boot linux fpga (#924)
+    
+    Signed-off-by: Guillaume Chauvon<guillaume.chauvon@thalesgroup.com>
 
 """
 
