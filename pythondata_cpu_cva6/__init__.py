@@ -4,32 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post400"
-version_tuple = (4, 2, 0, 400)
+version_str = "4.2.0.post401"
+version_tuple = (4, 2, 0, 401)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post400")
+    pversion = V("4.2.0.post401")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post258"
-data_version_tuple = (4, 2, 0, 258)
+data_version_str = "4.2.0.post259"
+data_version_tuple = (4, 2, 0, 259)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post258")
+    pdata_version = V("4.2.0.post259")
 except ImportError:
     pass
-data_git_hash = "66f158dea03328bc3aefb0177293ca52d4235940"
-data_git_describe = "v4.2.0-258-g66f158de"
+data_git_hash = "767c465cfbac8e5e9112e3b067199963d6a89cfd"
+data_git_describe = "v4.2.0-259-g767c465c"
 data_git_msg = """\
-commit 66f158dea03328bc3aefb0177293ca52d4235940
-Author: Guillaume Chauvon <94678394+Gchauvon@users.noreply.github.com>
-Date:   Tue Jun 28 09:59:51 2022 +0200
+commit 767c465cfbac8e5e9112e3b067199963d6a89cfd
+Author: Mike Thompson <mike@openhwgroup.org>
+Date:   Tue Jun 28 08:04:06 2022 -0400
 
-    FPGA: Add scripts to boot linux fpga (#924)
-    
-    Signed-off-by: Guillaume Chauvon<guillaume.chauvon@thalesgroup.com>
+    Introduce CV32A60X as first release (#916)
 
 """
 
