@@ -4,34 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post402"
-version_tuple = (4, 2, 0, 402)
+version_str = "4.2.0.post403"
+version_tuple = (4, 2, 0, 403)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post402")
+    pversion = V("4.2.0.post403")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post260"
-data_version_tuple = (4, 2, 0, 260)
+data_version_str = "4.2.0.post261"
+data_version_tuple = (4, 2, 0, 261)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post260")
+    pdata_version = V("4.2.0.post261")
 except ImportError:
     pass
-data_git_hash = "a9c7b4f1e127688b3e8de03a54a31abcdae2bda4"
-data_git_describe = "v4.2.0-260-ga9c7b4f1"
+data_git_hash = "22d29b080db5cfedd54b9de17ad20db2d6c69e0b"
+data_git_describe = "v4.2.0-261-g22d29b08"
 data_git_msg = """\
-commit a9c7b4f1e127688b3e8de03a54a31abcdae2bda4
-Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
-Date:   Tue Jun 28 22:15:55 2022 +0200
+commit 22d29b080db5cfedd54b9de17ad20db2d6c69e0b
+Author: Yannick Casamatta <yannick.casamatta@thalesgroup.com>
+Date:   Thu Jun 30 10:32:08 2022 +0200
 
-    Cvvdev/dev/formating4 (#920)
-    
-    Several format cleanings:
-    - split load_store_unit.sv to create lsu_bypass.sv
-    - add several "begin" and "end"
+    Gitlab-ci: Add way to disable workflow policy (#926)
 
 """
 
