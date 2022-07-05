@@ -4,33 +4,36 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post404"
-version_tuple = (4, 2, 0, 404)
+version_str = "4.2.0.post405"
+version_tuple = (4, 2, 0, 405)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post404")
+    pversion = V("4.2.0.post405")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post262"
-data_version_tuple = (4, 2, 0, 262)
+data_version_str = "4.2.0.post263"
+data_version_tuple = (4, 2, 0, 263)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post262")
+    pdata_version = V("4.2.0.post263")
 except ImportError:
     pass
-data_git_hash = "b2dc4752e1511488cc5fac2b1a0c9007428d2186"
-data_git_describe = "v4.2.0-262-gb2dc4752"
+data_git_hash = "0cfa94b8c663c2c5c0f47499853ad058d5eaac7a"
+data_git_describe = "v4.2.0-263-g0cfa94b8"
 data_git_msg = """\
-commit b2dc4752e1511488cc5fac2b1a0c9007428d2186
-Author: Guillaume Chauvon <94678394+Gchauvon@users.noreply.github.com>
-Date:   Thu Jun 30 11:56:35 2022 +0200
+commit 0cfa94b8c663c2c5c0f47499853ad058d5eaac7a
+Author: Kevin Eyssartier <kevin.eyssartier@thalesgroup.com>
+Date:   Tue Jul 5 07:18:55 2022 +0200
 
-    Enable CVXIF for target cv32a60X and add renaming for cvxif when using 3 operands (#925)
+    Adding a Bug issue template  (#930)
     
-    * re_name.sv: add condition related to CVXIF to rename 3rd operand
-    * cv32a60x_pkg.sv: set CVXIFEn to 1
+    * Create bug.yaml
+    
+    * Update bug.yaml - Case consistency
+    
+    * Spelling mistakes
 
 """
 
