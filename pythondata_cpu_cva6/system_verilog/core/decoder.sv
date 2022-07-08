@@ -136,7 +136,7 @@ module decoder import ariane_pkg::*; (
                                 12'b111_1011_0010: begin
                                     instruction_o.op = ariane_pkg::DRET;
                                     // check that we are in debug mode when executing this instruction
-                                    illegal_instr = (!debug_mode_i) ? 1'b1 : 1'b0;
+                                    illegal_instr = (!debug_mode_i) ? 1'b1 : illegal_instr;
                                 end
                                 // WFI
                                 12'b1_0000_0101: begin
@@ -158,7 +158,7 @@ module decoder import ariane_pkg::*; (
                                     if (instr.instr[31:25] == 7'b1001) begin
                                         // check privilege level, SFENCE.VMA can only be executed in M/S mode
                                         // otherwise decode an illegal instruction
-                                        illegal_instr    = (priv_lvl_i inside {riscv::PRIV_LVL_M, riscv::PRIV_LVL_S}) ? 1'b0 : 1'b1;
+                                        illegal_instr    = (priv_lvl_i inside {riscv::PRIV_LVL_M, riscv::PRIV_LVL_S}) ? illegal_instr : 1'b1;
                                         instruction_o.op = ariane_pkg::SFENCE_VMA;
                                         // check TVM flag and intercept SFENCE.VMA call if necessary
                                         if (priv_lvl_i == riscv::PRIV_LVL_S && tvm_i)
@@ -238,9 +238,6 @@ module decoder import ariane_pkg::*; (
 
                         default: illegal_instr = 1'b1;
                     endcase
-
-                    if (instr.stype.rs1 != '0 || instr.stype.imm0 != '0 || instr.instr[31:28] != '0)
-                        illegal_instr = 1'b1;
                 end
 
                 // --------------------------
