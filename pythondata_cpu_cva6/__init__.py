@@ -4,40 +4,42 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post410"
-version_tuple = (4, 2, 0, 410)
+version_str = "4.2.0.post411"
+version_tuple = (4, 2, 0, 411)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post410")
+    pversion = V("4.2.0.post411")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post268"
-data_version_tuple = (4, 2, 0, 268)
+data_version_str = "4.2.0.post269"
+data_version_tuple = (4, 2, 0, 269)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post268")
+    pdata_version = V("4.2.0.post269")
 except ImportError:
     pass
-data_git_hash = "011edf49bdbc08b3ef62283406cf129d48c29372"
-data_git_describe = "v4.2.0-268-g011edf49"
+data_git_hash = "56ccf8089e80e5c7950038cad5796e50c64aa0c2"
+data_git_describe = "v4.2.0-269-g56ccf808"
 data_git_msg = """\
-commit 011edf49bdbc08b3ef62283406cf129d48c29372
-Author: Moritz Schneider <Moschn@users.noreply.github.com>
-Date:   Fri Jul 8 10:21:57 2022 +0200
+commit 56ccf8089e80e5c7950038cad5796e50c64aa0c2
+Author: Kevin Eyssartier <kevin.eyssartier@thalesgroup.com>
+Date:   Fri Jul 8 14:13:28 2022 +0200
 
-    Fix exception type on PMP check during PTW (#908)
+    Associated PRs in task.yaml (#929)
     
-    Fixes #906
+    * Removing CVA6-SDK from task.yaml
     
-    According to the spec:
-    > If accessing pte violates a PMA or PMP check, raise an access-fault
-    > exception corresponding to the original access type.
+    * Associated PRs in task.yaml
     
-    Found by @Phantom1003 and @ProjectDimlight
+    This commit provide a new textarea to fill links to PRs used to complete the task.
     
-    Signed-off-by: Moritz Schneider <moritz.schneider@inf.ethz.ch>
+    * Create bug.yaml
+    
+    * Update bug.yaml - Case consistency
+    
+    Co-authored-by: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
 
 """
 
