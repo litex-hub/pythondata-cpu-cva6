@@ -135,7 +135,7 @@ package ariane_pkg;
     localparam BITS_SATURATION_COUNTER = 2;
     localparam NR_COMMIT_PORTS = 2;
 
-    localparam ENABLE_RENAME = 1'b0;
+    localparam ENABLE_RENAME = cva6_config_pkg::CVA6ConfigRenameEn;
 
     localparam ISSUE_WIDTH = 1;
     // amount of pipeline registers inserted for load/store return path
@@ -166,13 +166,13 @@ package ariane_pkg;
     localparam bit RVF = (riscv::IS_XLEN64 | riscv::IS_XLEN32) & riscv::FPU_EN; // Is F extension enabled for both 32 Bit and 64 bit CPU
     localparam bit RVD = (riscv::IS_XLEN64 ? 1:0) & riscv::FPU_EN;              // Is D extension enabled for only 64 bit CPU
 `endif
-    localparam bit RVA = 1'b1; // Is A extension enabled
+    localparam bit RVA = cva6_config_pkg::CVA6ConfigAExtEn; // Is A extension enabled
 
     // Transprecision floating-point extensions configuration
-    localparam bit XF16    = 1'b0; // Is half-precision float extension (Xf16) enabled
-    localparam bit XF16ALT = 1'b0; // Is alternative half-precision float extension (Xf16alt) enabled
-    localparam bit XF8     = 1'b0; // Is quarter-precision float extension (Xf8) enabled
-    localparam bit XFVEC   = 1'b0; // Is vectorial float extension (Xfvec) enabled
+    localparam bit XF16    = cva6_config_pkg::CVA6ConfigF16En; // Is half-precision float extension (Xf16) enabled
+    localparam bit XF16ALT = cva6_config_pkg::CVA6ConfigF16AltEn; // Is alternative half-precision float extension (Xf16alt) enabled
+    localparam bit XF8     = cva6_config_pkg::CVA6ConfigF8En; // Is quarter-precision float extension (Xf8) enabled
+    localparam bit XFVEC   = cva6_config_pkg::CVA6ConfigFVecEn; // Is vectorial float extension (Xfvec) enabled
 
     // Transprecision float unit
     localparam int unsigned LAT_COMP_FP32    = 'd2;
@@ -300,6 +300,11 @@ package ariane_pkg;
     // maximum instructions we can fetch on one request (we support compressed instructions)
     localparam int unsigned INSTR_PER_FETCH = RVC == 1'b1 ? (FETCH_WIDTH / 16) : 1;
     localparam int unsigned LOG2_INSTR_PER_FETCH = RVC == 1'b1 ? $clog2(ariane_pkg::INSTR_PER_FETCH) : 1;
+
+    // ---------------
+    // Enable BITMANIP
+    // ---------------
+    localparam bit BITMANIP = 1'b1;
 
     // Only use struct when signals have same direction
     // exception
@@ -457,7 +462,8 @@ package ariane_pkg;
     // ---------------
     // EX Stage
     // ---------------
-    typedef enum logic [6:0] { // basic ALU op
+
+    typedef enum logic [7:0] { // basic ALU op
                                ADD, SUB, ADDW, SUBW,
                                // logic operations
                                XORL, ORL, ANDL,
@@ -494,7 +500,29 @@ package ariane_pkg;
                                // Vectorial Floating-Point Instructions that don't directly map onto the scalar ones
                                VFMIN, VFMAX, VFSGNJ, VFSGNJN, VFSGNJX, VFEQ, VFNE, VFLT, VFGE, VFLE, VFGT, VFCPKAB_S, VFCPKCD_S, VFCPKAB_D, VFCPKCD_D,
                                // Offload Instructions to be directed into cv_x_if
-                               OFFLOAD
+                               OFFLOAD,
+                               // Or-Combine and REV8
+                               ORCB, REV8,
+                               // Bitwise Rotation
+                               ROL, ROLW, ROR, RORI, RORIW, RORW,
+                               // Sign and Zero Extend
+                               SEXTB, SEXTH, ZEXTH,
+                               // Count population
+                               CPOP, CPOPW,
+                               // Count Leading/Training Zeros
+                               CLZ, CLZW, CTZ, CTZW,
+                               // Carry less multiplication Op's
+                               CLMUL, CLMULH, CLMULR,
+                               // Single bit instructions Op's
+                               BCLR, BCLRI, BEXT, BEXTI, BINV, BINVI, BSET, BSETI,
+                               // Integer minimum/maximum
+                               MAX, MAXU, MIN, MINU,
+                               // Shift with Add Unsigned Word and Unsigned Word Op's (Bitmanip)
+                               SH1ADDUW, SH2ADDUW, SH3ADDUW, ADDUW, SLLIUW,
+                               // Shift with Add (Bitmanip)
+                               SH1ADD, SH2ADD, SH3ADD,
+                               // Bitmanip Logical with negate op (Bitmanip)
+                               ANDN, ORN, XNOR
                              } fu_op;
 
     typedef struct packed {

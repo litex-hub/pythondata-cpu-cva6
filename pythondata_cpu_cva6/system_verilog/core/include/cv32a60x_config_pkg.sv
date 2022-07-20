@@ -1,4 +1,4 @@
-// Copyright 2021 Thales DIS design services SAS
+// Copyright 2022 Thales DIS design services SAS
 //
 // Licensed under the Solderpad Hardware Licence, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -10,9 +10,9 @@
 
 package cva6_config_pkg;
 
-    localparam CVA6ConfigXlen = 64;
+    localparam CVA6ConfigXlen = 32;
 
-    localparam CVA6ConfigFpuEn = 1;
+    localparam CVA6ConfigFpuEn = 0;
     localparam CVA6ConfigF16En = 0;
     localparam CVA6ConfigF16AltEn = 0;
     localparam CVA6ConfigF8En = 0;
@@ -20,7 +20,7 @@ package cva6_config_pkg;
 
     localparam CVA6ConfigCvxifEn = 1;
     localparam CVA6ConfigCExtEn = 1;
-    localparam CVA6ConfigAExtEn = 1;
+    localparam CVA6ConfigAExtEn = 0;
 
     localparam CVA6ConfigFetchUserEn = 0;
     localparam CVA6ConfigFetchUserWidth = CVA6ConfigXlen;

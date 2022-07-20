@@ -4,51 +4,51 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post384"
-version_tuple = (4, 2, 0, 384)
+version_str = "4.2.0.post411"
+version_tuple = (4, 2, 0, 411)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post384")
+    pversion = V("4.2.0.post411")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post253"
-data_version_tuple = (4, 2, 0, 253)
+data_version_str = "4.2.0.post269"
+data_version_tuple = (4, 2, 0, 269)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post253")
+    pdata_version = V("4.2.0.post269")
 except ImportError:
     pass
-data_git_hash = "75807530f26ba9a0ca501e9d3a6575ec375ed7ab"
-data_git_describe = "v4.2.0-253-g75807530"
+data_git_hash = "56ccf8089e80e5c7950038cad5796e50c64aa0c2"
+data_git_describe = "v4.2.0-269-g56ccf808"
 data_git_msg = """\
-commit 75807530f26ba9a0ca501e9d3a6575ec375ed7ab
-Author: Steffen Persvold <spersvold@users.noreply.github.com>
-Date:   Thu May 12 10:46:40 2022 +0200
+commit 56ccf8089e80e5c7950038cad5796e50c64aa0c2
+Author: Kevin Eyssartier <kevin.eyssartier@thalesgroup.com>
+Date:   Fri Jul 8 14:13:28 2022 +0200
 
-    Add support for "high" counter CSRs in 32-bit mode (#847)
+    Associated PRs in task.yaml (#929)
     
-    * Add support for "high" counter CSRs in 32-bit mode
+    * Removing CVA6-SDK from task.yaml
     
-    In 32bit mode MCYCLEH, MINSTRETH, CYCLEH, TIMEH and INSTRETH are
-    used to return the most significant 32-bit value of the counters
-    which are now always 64-bit wide.
+    * Associated PRs in task.yaml
     
-    Signed-off-by: Steffen Persvold <spersvold@gmail.com>
+    This commit provide a new textarea to fill links to PRs used to complete the task.
     
-    * Enable writing of MCYCLEH and MINSTRETH CSRs
+    * Create bug.yaml
     
-    Signed-off-by: Steffen Persvold <spersvold@gmail.com>
+    * Update bug.yaml - Case consistency
+    
+    Co-authored-by: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
 
 """
 
 # Tool version info
-tool_version_str = "0.0.post131"
-tool_version_tuple = (0, 0, 131)
+tool_version_str = "0.0.post142"
+tool_version_tuple = (0, 0, 142)
 try:
     from packaging.version import Version as V
-    ptool_version = V("0.0.post131")
+    ptool_version = V("0.0.post142")
 except ImportError:
     pass
 

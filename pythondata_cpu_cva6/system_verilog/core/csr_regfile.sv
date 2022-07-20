@@ -326,7 +326,7 @@ module csr_regfile import ariane_pkg::*; #(
     riscv::xlen_t mask;
     always_comb begin : csr_update
         automatic riscv::satp_t satp;
-        automatic riscv::xlen_t instret;
+        automatic logic [63:0] instret;
 
 
         satp = satp_q;
@@ -1180,10 +1180,11 @@ module csr_regfile import ariane_pkg::*; #(
             for(int i = 0; i < 16; i++) begin
                 if(i < NrPMPEntries) begin
                     // We only support >=8-byte granularity, NA4 is disabled
-                    if(pmpcfg_d[i].addr_mode != riscv::NA4 && !(pmpcfg_d[i].access_type.r == '0 && pmpcfg_d[i].access_type.w == '1)) 
+                    if(pmpcfg_d[i].addr_mode != riscv::NA4 && !(pmpcfg_d[i].access_type.r == '0 && pmpcfg_d[i].access_type.w == '1)) begin
                         pmpcfg_q[i] <= pmpcfg_d[i];
-                    else
+                    end else begin
                         pmpcfg_q[i] <= pmpcfg_q[i];
+                    end
                     pmpaddr_q[i] <= pmpaddr_d[i];
                 end else begin
                     pmpcfg_q[i] <= '0;
