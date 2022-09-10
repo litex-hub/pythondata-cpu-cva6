@@ -4,36 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post412"
-version_tuple = (4, 2, 0, 412)
+version_str = "4.2.0.post421"
+version_tuple = (4, 2, 0, 421)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post412")
+    pversion = V("4.2.0.post421")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post270"
-data_version_tuple = (4, 2, 0, 270)
+data_version_str = "4.2.0.post279"
+data_version_tuple = (4, 2, 0, 279)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post270")
+    pdata_version = V("4.2.0.post279")
 except ImportError:
     pass
-data_git_hash = "b6c1d04b6fa022c2e2df0b287865d28a0d42e756"
-data_git_describe = "v4.2.0-270-gb6c1d04b"
+data_git_hash = "e60330ce902619a291ae5b8c632fe6cf9e739540"
+data_git_describe = "v4.2.0-279-ge60330ce"
 data_git_msg = """\
-commit b6c1d04b6fa022c2e2df0b287865d28a0d42e756
-Author: Guillaume Chauvon <94678394+Gchauvon@users.noreply.github.com>
-Date:   Wed Jul 20 17:03:06 2022 +0200
+commit e60330ce902619a291ae5b8c632fe6cf9e739540
+Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
+Date:   Mon Sep 5 23:40:15 2022 +0200
 
-    decoder.sv: fix sfence.vma when rs1 != 0 (#933)
-    
-    unlike other instructions with minor opcode == PRIV,
-    SFENCE.VMA do not check for rs1 != 0.
-    Only check for rd !=0 to raise illegal instruction
-    
-    Signed-off-by: Guillaume Chauvon <guillaume.chauvon@thalesgroup.com>
+    Design Spec initial commit: description of introduction, system and frontend (#949)
 
 """
 
