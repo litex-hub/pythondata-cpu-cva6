@@ -4,30 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post421"
-version_tuple = (4, 2, 0, 421)
+version_str = "4.2.0.post422"
+version_tuple = (4, 2, 0, 422)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post421")
+    pversion = V("4.2.0.post422")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post279"
-data_version_tuple = (4, 2, 0, 279)
+data_version_str = "4.2.0.post280"
+data_version_tuple = (4, 2, 0, 280)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post279")
+    pdata_version = V("4.2.0.post280")
 except ImportError:
     pass
-data_git_hash = "e60330ce902619a291ae5b8c632fe6cf9e739540"
-data_git_describe = "v4.2.0-279-ge60330ce"
+data_git_hash = "3da41f7908bc5e2883fce9b0c9253d7139826216"
+data_git_describe = "v4.2.0-280-g3da41f79"
 data_git_msg = """\
-commit e60330ce902619a291ae5b8c632fe6cf9e739540
+commit 3da41f7908bc5e2883fce9b0c9253d7139826216
 Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
-Date:   Mon Sep 5 23:40:15 2022 +0200
+Date:   Mon Sep 12 11:07:12 2022 +0200
 
-    Design Spec initial commit: description of introduction, system and frontend (#949)
+    Revisit system/subsystem/module/submodule terminology (#953)
 
 """
 
