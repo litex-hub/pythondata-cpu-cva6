@@ -4,35 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post423"
-version_tuple = (4, 2, 0, 423)
+version_str = "4.2.0.post424"
+version_tuple = (4, 2, 0, 424)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post423")
+    pversion = V("4.2.0.post424")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post281"
-data_version_tuple = (4, 2, 0, 281)
+data_version_str = "4.2.0.post282"
+data_version_tuple = (4, 2, 0, 282)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post281")
+    pdata_version = V("4.2.0.post282")
 except ImportError:
     pass
-data_git_hash = "9109ff07f67bccc7a75a55d67d8734eedc8344ee"
-data_git_describe = "v4.2.0-281-g9109ff07"
+data_git_hash = "52fdcc9429f9646e19e388ab3daa61057ddcdb2e"
+data_git_describe = "v4.2.0-282-g52fdcc94"
 data_git_msg = """\
-commit 9109ff07f67bccc7a75a55d67d8734eedc8344ee
+commit 52fdcc9429f9646e19e388ab3daa61057ddcdb2e
 Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
-Date:   Wed Sep 21 13:00:59 2022 +0200
+Date:   Thu Sep 22 17:33:15 2022 +0200
 
-    Cvvdev/dev/rvfi (#959)
-    
-    * Add load and store information to RVFI
-    * Add rs1 and rs2 information to RVFI
-    * Condition rvfi mem and rs1/rs2 information generation by RVFI_MEM
-    This add-on is requested by ISACOV and test termination.
+    Fix the AXI_USER_WIDTH value and add some begin/end in frontend.sv (#961)
 
 """
 
