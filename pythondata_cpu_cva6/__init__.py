@@ -4,30 +4,34 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post424"
-version_tuple = (4, 2, 0, 424)
+version_str = "4.2.0.post425"
+version_tuple = (4, 2, 0, 425)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post424")
+    pversion = V("4.2.0.post425")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post282"
-data_version_tuple = (4, 2, 0, 282)
+data_version_str = "4.2.0.post283"
+data_version_tuple = (4, 2, 0, 283)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post282")
+    pdata_version = V("4.2.0.post283")
 except ImportError:
     pass
-data_git_hash = "52fdcc9429f9646e19e388ab3daa61057ddcdb2e"
-data_git_describe = "v4.2.0-282-g52fdcc94"
+data_git_hash = "6d263a6023298bf9d83aba44ddb1f30fd3ed90a9"
+data_git_describe = "v4.2.0-283-g6d263a60"
 data_git_msg = """\
-commit 52fdcc9429f9646e19e388ab3daa61057ddcdb2e
-Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
-Date:   Thu Sep 22 17:33:15 2022 +0200
+commit 6d263a6023298bf9d83aba44ddb1f30fd3ed90a9
+Author: Zbigniew Chamski <107464696+zchamski@users.noreply.github.com>
+Date:   Thu Sep 22 19:49:19 2022 +0200
 
-    Fix the AXI_USER_WIDTH value and add some begin/end in frontend.sv (#961)
+    compressed_decoder.sv: Fix FP word L/S decompression as per ISA spec v2.2. (#957)
+    
+    * compressed_decoder.sv: Fix of word L/S as per ISA spec v2.2.
+    * core/compressed_decoder.sv: Use word L/S patterns in FLW/FSW/FLWSP/FSWSP
+      expansions on RV32C.
 
 """
 
