@@ -4,30 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post428"
-version_tuple = (4, 2, 0, 428)
+version_str = "4.2.0.post430"
+version_tuple = (4, 2, 0, 430)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post428")
+    pversion = V("4.2.0.post430")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post286"
-data_version_tuple = (4, 2, 0, 286)
+data_version_str = "4.2.0.post288"
+data_version_tuple = (4, 2, 0, 288)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post286")
+    pdata_version = V("4.2.0.post288")
 except ImportError:
     pass
-data_git_hash = "cfb81565b7f3e2a0537ea206927470cd41471137"
-data_git_describe = "v4.2.0-286-gcfb81565"
+data_git_hash = "df920cda7e4a8a0db7b6bcd0d2270a1b5a7521d2"
+data_git_describe = "v4.2.0-288-gdf920cda"
 data_git_msg = """\
-commit cfb81565b7f3e2a0537ea206927470cd41471137
-Author: Tamas Olaszi <62057357+tolaszi@users.noreply.github.com>
-Date:   Thu Oct 6 12:53:36 2022 +0200
+commit df920cda7e4a8a0db7b6bcd0d2270a1b5a7521d2
+Author: JeanRochCoulon <jean-roch.coulon@thalesgroup.com>
+Date:   Thu Oct 13 08:02:01 2022 +0200
 
-    Add CV32A6 CSR specification in .rst and IP-XACT format (#952)
+    Remove verilator_work files (#975)
 
 """
 
