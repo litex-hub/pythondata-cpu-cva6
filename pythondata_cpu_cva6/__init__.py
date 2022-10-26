@@ -4,32 +4,39 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post432"
-version_tuple = (4, 2, 0, 432)
+version_str = "4.2.0.post433"
+version_tuple = (4, 2, 0, 433)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post432")
+    pversion = V("4.2.0.post433")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post290"
-data_version_tuple = (4, 2, 0, 290)
+data_version_str = "4.2.0.post291"
+data_version_tuple = (4, 2, 0, 291)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post290")
+    pdata_version = V("4.2.0.post291")
 except ImportError:
     pass
-data_git_hash = "f346d6604f158a60a77e032f7396d5ac6a78e4aa"
-data_git_describe = "v4.2.0-290-gf346d660"
+data_git_hash = "17743bc7120f1eb24974e5d7eb7f519ef53c4bdc"
+data_git_describe = "v4.2.0-291-g17743bc7"
 data_git_msg = """\
-commit f346d6604f158a60a77e032f7396d5ac6a78e4aa
-Author: Jérôme Quévremont <jerome.quevremont@thalesgroup.com>
-Date:   Sat Oct 22 08:22:21 2022 +0200
+commit 17743bc7120f1eb24974e5d7eb7f519ef53c4bdc
+Author: Nils Wistoff <nwistoff@iis.ee.ethz.ch>
+Date:   Wed Oct 26 11:20:19 2022 +0200
 
-    Scratchpad can also be separate from caches (#981)
+    cache_subsystem: Parametrise AXI interface (#982)
     
-    To ease the implementation. As we'll target FPGA and ASIC (not ASSP), we do not need a "one size fits all" solution.
+    Parametrise the AXI interface of CVA6. With this PR, both cache subsystems support variable AXI address widths. The write-through cache furthermore supports variable AXI data widths. Moreover, this PR includes a modular AXI testbench for the WT cache to test the introduced changes. The following configurations of the WT cache have been verified:
+    
+    XLEN   Cacheline Width   AXI data width   AXI address width
+    64                  128                     64                       64
+    64                  128                   128                       52
+    64                  512                   128                       64
+    32                  512                   256                       48
+    32                    64                     32                       48
 
 """
 
