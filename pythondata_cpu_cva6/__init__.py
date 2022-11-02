@@ -4,39 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post433"
-version_tuple = (4, 2, 0, 433)
+version_str = "4.2.0.post434"
+version_tuple = (4, 2, 0, 434)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post433")
+    pversion = V("4.2.0.post434")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post291"
-data_version_tuple = (4, 2, 0, 291)
+data_version_str = "4.2.0.post292"
+data_version_tuple = (4, 2, 0, 292)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post291")
+    pdata_version = V("4.2.0.post292")
 except ImportError:
     pass
-data_git_hash = "17743bc7120f1eb24974e5d7eb7f519ef53c4bdc"
-data_git_describe = "v4.2.0-291-g17743bc7"
+data_git_hash = "ec61b89df66b272fbbc9cb4e9d24dccd33d621af"
+data_git_describe = "v4.2.0-292-gec61b89d"
 data_git_msg = """\
-commit 17743bc7120f1eb24974e5d7eb7f519ef53c4bdc
-Author: Nils Wistoff <nwistoff@iis.ee.ethz.ch>
-Date:   Wed Oct 26 11:20:19 2022 +0200
+commit ec61b89df66b272fbbc9cb4e9d24dccd33d621af
+Author: Guillaume Chauvon <94678394+Gchauvon@users.noreply.github.com>
+Date:   Wed Nov 2 10:24:33 2022 +0100
 
-    cache_subsystem: Parametrise AXI interface (#982)
-    
-    Parametrise the AXI interface of CVA6. With this PR, both cache subsystems support variable AXI address widths. The write-through cache furthermore supports variable AXI data widths. Moreover, this PR includes a modular AXI testbench for the WT cache to test the introduced changes. The following configurations of the WT cache have been verified:
-    
-    XLEN   Cacheline Width   AXI data width   AXI address width
-    64                  128                     64                       64
-    64                  128                   128                       52
-    64                  512                   128                       64
-    32                  512                   256                       48
-    32                    64                     32                       48
+    Flist.cv32a60x: add example coprocessor to Flist (#986)
 
 """
 
