@@ -4,30 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post434"
-version_tuple = (4, 2, 0, 434)
+version_str = "4.2.0.post435"
+version_tuple = (4, 2, 0, 435)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post434")
+    pversion = V("4.2.0.post435")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post292"
-data_version_tuple = (4, 2, 0, 292)
+data_version_str = "4.2.0.post293"
+data_version_tuple = (4, 2, 0, 293)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post292")
+    pdata_version = V("4.2.0.post293")
 except ImportError:
     pass
-data_git_hash = "ec61b89df66b272fbbc9cb4e9d24dccd33d621af"
-data_git_describe = "v4.2.0-292-gec61b89d"
+data_git_hash = "c5947082c48a673b822d51b1deb2cafc2cecab31"
+data_git_describe = "v4.2.0-293-gc5947082"
 data_git_msg = """\
-commit ec61b89df66b272fbbc9cb4e9d24dccd33d621af
-Author: Guillaume Chauvon <94678394+Gchauvon@users.noreply.github.com>
-Date:   Wed Nov 2 10:24:33 2022 +0100
+commit c5947082c48a673b822d51b1deb2cafc2cecab31
+Author: sébastien jacq <57099003+sjthales@users.noreply.github.com>
+Date:   Tue Nov 8 23:15:02 2022 +0100
 
-    Flist.cv32a60x: add example coprocessor to Flist (#986)
+    Optimize FPGA memories (#989)
 
 """
 
