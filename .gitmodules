@@ -1,9 +1,6 @@
 [submodule "pythondata_cpu_cva6/system_verilog/corev_apu/axi_mem_if"]
 	path = pythondata_cpu_cva6/system_verilog/corev_apu/axi_mem_if
 	url = https://github.com/pulp-platform/axi_mem_if.git
-[submodule "pythondata_cpu_cva6/system_verilog/corev_apu/fpga-support"]
-	path = pythondata_cpu_cva6/system_verilog/corev_apu/fpga-support
-	url = https://github.com/pulp-platform/fpga-support.git
 [submodule "pythondata_cpu_cva6/system_verilog/common/submodules/common_cells"]
 	path = pythondata_cpu_cva6/system_verilog/common/submodules/common_cells
 	url = https://github.com/pulp-platform/common_cells.git
