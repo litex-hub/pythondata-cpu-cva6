@@ -1,9 +1,15 @@
 import setuptools
+import re
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-from pythondata_cpu_cva6 import version_str
+with open("pythondata_cpu_cva6/__init__.py", "r") as fh:
+    version_str = re.search(
+        r'^version_str = "([^"]+)"',
+        fh.read(),
+        re.MULTILINE,
+    ).group(1)
 
 setuptools.setup(
     name="pythondata-cpu-cva6",
@@ -24,7 +30,7 @@ Python module containing system_verilog files for CVA6 cpu.""",
     zip_safe=False,
     packages=setuptools.find_packages(),
     package_data={
-    	'cpu_cva6': ['cpu_cva6/system_verilog/**'],
+    	'pythondata_cpu_cva6': ['system_verilog/**'],
     },
     include_package_data=True,
     project_urls={
