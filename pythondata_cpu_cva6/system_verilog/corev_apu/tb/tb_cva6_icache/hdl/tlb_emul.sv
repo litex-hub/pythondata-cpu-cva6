@@ -25,8 +25,8 @@ module tlb_emul import ariane_pkg::*; import wt_cache_pkg::*; #(
   input logic [63:0]     tlb_offset_i,
 
   // icache interface
-  input  icache_areq_o_t req_i,
-  output icache_areq_i_t req_o
+  input  icache_arsp_t req_i,
+  output icache_areq_t req_o
 );
 
 logic tlb_ready_d, tlb_ready_q;
@@ -36,7 +36,7 @@ always_ff @(posedge clk_i or negedge rst_ni) begin : p_tlb_rand
   automatic int rnd = 0;
 
   assert(TlbRandHitRate<=100 && TlbRandHitRate>=0) else
-    $fatal("TlbRandHitRate must be a percentage");
+    $fatal(1, "TlbRandHitRate must be a percentage");
 
   if(~rst_ni) begin
     tlb_ready_q <= '0;

@@ -1,0 +1,22 @@
+// Copyright OpenHW contributors
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+//
+// common waiver rules for verilator
+
+`verilator_config
+
+// waving these warnings since they are in vendor or core_apu
+lint_off -rule STMTDLY -file "*/corev_apu/*"
+lint_off -rule WIDTHEXPAND -file "*/common/local/util/sram.sv"
+lint_off -rule WIDTHTRUNC -file "*/core/include/std_cache_pkg.sv"
+lint_off -file "*/corev_apu/*"
+lint_off -file "*/vendor/*"
+
+lint_off -rule WIDTHEXPAND -file "*/core/cache_subsystem/axi_adapter.sv"
+lint_off -rule WIDTHEXPAND -file "*/core/axi_shim.sv"
+
+// P2
+lint_off -rule WIDTHEXPAND -file "*/core/issue_read_operands.sv"
+lint_off -rule WIDTHEXPAND -file "*/core/ariane_regfile_ff.sv"
+lint_off -rule SELRANGE -file "*/core/commit_stage.sv"

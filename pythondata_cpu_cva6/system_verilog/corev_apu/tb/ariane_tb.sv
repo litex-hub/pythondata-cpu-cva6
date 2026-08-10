@@ -18,15 +18,35 @@ import ariane_pkg::*;
 import uvm_pkg::*;
 
 `include "uvm_macros.svh"
+`include "rvfi_types.svh"
 
-`define MAIN_MEM(P) dut.i_sram.gen_cut[0].gen_mem.i_tc_sram_wrapper.i_tc_sram.init_val[(``P``)]
-// `define USER_MEM(P) dut.i_sram.gen_cut[0].gen_mem.gen_mem_user.i_tc_sram_wrapper_user.i_tc_sram.init_val[(``P``)]
+`define MAIN_MEM(P) dut.i_sram.gen_cut[0].i_tc_sram_wrapper.i_tc_sram.init_val[(``P``)]
+`define USER_MEM(P) dut.i_sram.gen_cut[0].gen_mem_user.i_tc_sram_wrapper_user.i_tc_sram.init_val[(``P``)]
 
-import "DPI-C" function read_elf(input string filename);
+`ifndef READ_ELF_T
+`define READ_ELF_T
+import "DPI-C" function void read_elf(input string filename);
 import "DPI-C" function byte get_section(output longint address, output longint len);
-import "DPI-C" context function void read_section(input longint address, inout byte buffer[]);
+import "DPI-C" context function void read_section_sv(input longint address, inout byte buffer[]);
+`endif
 
 module ariane_tb;
+
+    // cva6 configuration
+    localparam config_pkg::cva6_cfg_t CVA6Cfg = build_config_pkg::build_config(cva6_config_pkg::cva6_cfg);
+
+    // RVFI
+    localparam type rvfi_instr_t = `RVFI_INSTR_T(CVA6Cfg);
+    localparam type rvfi_csr_elmt_t = `RVFI_CSR_ELMT_T(CVA6Cfg);
+    localparam type rvfi_csr_t = `RVFI_CSR_T(CVA6Cfg, rvfi_csr_elmt_t);
+
+    // RVFI PROBES
+    localparam type rvfi_probes_instr_t = `RVFI_PROBES_INSTR_T(CVA6Cfg);
+    localparam type rvfi_probes_csr_t = `RVFI_PROBES_CSR_T(CVA6Cfg);
+    localparam type rvfi_probes_t = struct packed {
+        rvfi_probes_csr_t csr;
+        rvfi_probes_instr_t instr;
+    };
 
     static uvm_cmdline_processor uvcl = uvm_cmdline_processor::get_inst();
 
@@ -34,7 +54,7 @@ module ariane_tb;
     // toggle with RTC period
     localparam int unsigned RTC_CLOCK_PERIOD = 30.517us;
 
-    localparam NUM_WORDS = 2**16;
+    localparam NUM_WORDS = 2**18;
     logic clk_i;
     logic rst_ni;
     logic rtc_i;
@@ -47,35 +67,18 @@ module ariane_tb;
     string binary = "";
 
     ariane_testharness #(
+        .CVA6Cfg ( CVA6Cfg ),
+        //
         .NUM_WORDS         ( NUM_WORDS ),
         .InclSimDTM        ( 1'b1      ),
-        .StallRandomOutput ( 1'b1      ),
-        .StallRandomInput  ( 1'b1      )
+        .StallRandomOutput ( 1'b0      ),
+        .StallRandomInput  ( 1'b0      )
     ) dut (
         .clk_i,
         .rst_ni,
         .rtc_i,
         .exit_o
     );
-
-`ifdef SPIKE_TANDEM
-    spike #(
-        .Size ( NUM_WORDS * 8 )
-    ) i_spike (
-        .clk_i,
-        .rst_ni,
-        .clint_tick_i   ( rtc_i                               ),
-        .commit_instr_i ( dut.i_ariane.commit_instr_id_commit ),
-        .commit_ack_i   ( dut.i_ariane.commit_ack             ),
-        .exception_i    ( dut.i_ariane.ex_commit              ),
-        .waddr_i        ( dut.i_ariane.waddr_commit_id        ),
-        .wdata_i        ( dut.i_ariane.wdata_commit_id        ),
-        .priv_lvl_i     ( dut.i_ariane.priv_lvl               )
-    );
-    initial begin
-        $display("Running binary in tandem mode");
-    end
-`endif
 
     // Clock process
     initial begin
@@ -122,24 +125,24 @@ module ariane_tb;
     // Note that we are loosing the capabilities to use risc-fesvr though
     initial begin
         automatic logic [7:0][7:0] mem_row;
-        longint address, len;
+        longint address, load_address, last_load_address, len;
         byte buffer[];
-        void'(uvcl.get_arg_value("+PRELOAD=", binary));
+        void'(uvcl.get_arg_value("+elf_file=", binary));
 
         if (binary != "") begin
             `uvm_info( "Core Test", $sformatf("Preloading ELF: %s", binary), UVM_LOW)
 
-            void'(read_elf(binary));
+            read_elf(binary);
             // wait with preloading, otherwise randomization will overwrite the existing value
             wait(clk_i);
 
+            last_load_address = 'hFFFFFFFF;
             // while there are more sections to process
             while (get_section(address, len)) begin
                 automatic int num_words = (len+7)/8;
-                `uvm_info( "Core Test", $sformatf("Loading Address: %x, Length: %x", address, len),
-UVM_LOW)
+                `uvm_info( "Core Test", $sformatf("Loading Address: %x, Length: %x", address, len), UVM_NONE)
                 buffer = new [num_words*8];
-                void'(read_section(address, buffer));
+                read_section_sv(address, buffer);
                 // preload memories
                 // 64-bit
                 for (int i = 0; i < num_words; i++) begin
@@ -147,7 +150,18 @@ UVM_LOW)
                     for (int j = 0; j < 8; j++) begin
                         mem_row[j] = buffer[i*8 + j];
                     end
-                    `MAIN_MEM((address[23:0] >> 3) + i) = mem_row;
+                    load_address = (address[23:0] >> 3) + i;
+                    if (load_address != last_load_address) begin
+                        if (address[31:0] < 'h84000000) begin
+                            `MAIN_MEM(load_address) = mem_row;
+                        end else begin
+                             `USER_MEM(load_address) = mem_row;
+                        end
+                        last_load_address = load_address;
+                    end else begin
+                        `uvm_info( "Debug info", $sformatf(" Address: %x Already Loaded! ELF file might have less than 64 bits granularity on segments.", load_address), UVM_NONE)
+                    end
+
                 end
             end
         end

@@ -1,248 +1,277 @@
 package:
-  name: ariane
+  name: cva6
   authors:
     - "Florian Zaruba <zarubaf@iis.ee.ethz.ch>"
     - "Michael Schaffner <schaffner@iis.ee.ethz.ch>"
     - "Andreas Kuster <kustera@ethz.ch>"
 
 # WT_DCACHE
+dependencies:
+  axi: { git: "https://github.com/pulp-platform/axi.git", version: 0.31.0 }
+  common_cells:
+    { git: "https://github.com/pulp-platform/common_cells", version: 1.23.0 }
+  fpnew: { git: "https://github.com/openhwgroup/cvfpu.git", rev: 3eb6afe } # branch: develop
+  tech_cells_generic:
+    { git: "https://github.com/pulp-platform/tech_cells_generic.git", version: 0.2.13 }
 
 export_include_dirs:
-  - common/submodules/common_cells/include/
-  - corev_apu/axi/include/
+  - core/include
+  - core/cache_subsystem/hpdcache/rtl/include
+  - core/cache_subsystem/hpdcache/rtl/src/utils/ecc
 
 sources:
-  - defines:
-      WT_DCACHE: 1
+  - include_dirs:
+      - core/include
     files:
-    # Packages
-    - core/include/riscv_pkg.sv
-    - corev_apu/riscv-dbg/src/dm_pkg.sv
-    - core/include/ariane_pkg.sv
-    - core/include/wt_cache_pkg.sv
-    - corev_apu/axi/src/axi_pkg.sv
-    - corev_apu/register_interface/src/reg_intf.sv
-    - corev_apu/register_interface/src/reg_intf_pkg.sv
-    - core/include/axi_intf.sv
-    - corev_apu/tb/ariane_soc_pkg.sv
-    - corev_apu/tb/ariane_axi_soc_pkg.sv
-    - core/include/ariane_axi_pkg.sv
-    - core/include/std_cache_pkg.sv
-    - core/fpu/src/fpnew_pkg.sv
-    - core/fpu/src/fpu_div_sqrt_mvp/hdl/defs_div_sqrt_mvp.sv
-    # Stand-alone source files
-    - core/ariane.sv
-    - core/serdiv.sv
-    - core/ariane_regfile_ff.sv
-    - core/amo_buffer.sv
-    - core/id_stage.sv
-    - core/branch_unit.sv
-    - core/instr_realign.sv
-    - core/load_store_unit.sv
-    - core/controller.sv
-    - core/issue_stage.sv
-    - core/re_name.sv
-    - core/csr_buffer.sv
-    - core/mmu_sv32/cva6_tlb_sv32.sv
-    - core/mmu_sv39/tlb.sv
-    - core/decoder.sv
-    - core/scoreboard.sv
-    - core/perf_counters.sv
-    - core/store_unit.sv
-    - core/axi_adapter.sv
-    - core/fpu_wrap.sv
-    - core/csr_regfile.sv
-    - core/commit_stage.sv
-    - core/alu.sv
-    - core/multiplier.sv
-    - core/store_buffer.sv
-    - core/compressed_decoder.sv
-    - core/axi_shim.sv
-    - core/ex_stage.sv
-    - core/mmu_sv39/mmu.sv
-    - core/mmu_sv39/ptw.sv
-    - core/mult.sv
-    - core/mmu_sv32/cva6_mmu_sv32.sv
-    - core/mmu_sv32/cva6_ptw_sv32.sv
-    - core/load_unit.sv
-    - core/issue_read_operands.sv
-    - core/pmp/src/pmp_entry.sv
-    - core/pmp/src/pmp.sv
-    - core/fpu/src/fpnew_fma.sv
-    - core/fpu/src/fpnew_opgroup_fmt_slice.sv
-    - core/fpu/src/fpnew_divsqrt_multi.sv
-    - core/fpu/src/fpnew_fma_multi.sv
-    - core/fpu/src/fpnew_opgroup_multifmt_slice.sv
-    - core/fpu/src/fpnew_classifier.sv
-    - core/fpu/src/fpnew_noncomp.sv
-    - core/fpu/src/fpnew_cast_multi.sv
-    - core/fpu/src/fpnew_opgroup_block.sv
-    - core/fpu/src/fpnew_rounding.sv
-    - core/fpu/src/fpnew_top.sv
-    - core/fpu/src/fpu_div_sqrt_mvp/hdl/iteration_div_sqrt_mvp.sv
-    - core/fpu/src/fpu_div_sqrt_mvp/hdl/nrbd_nrsc_mvp.sv
-    - core/fpu/src/fpu_div_sqrt_mvp/hdl/div_sqrt_top_mvp.sv
-    - core/fpu/src/fpu_div_sqrt_mvp/hdl/preprocess_mvp.sv
-    - core/fpu/src/fpu_div_sqrt_mvp/hdl/control_mvp.sv
-    - core/fpu/src/fpu_div_sqrt_mvp/hdl/norm_div_sqrt_mvp.sv
-    - core/fpu/src/fpu_div_sqrt_mvp/hdl/div_sqrt_mvp_wrapper.sv
-    - core/frontend/frontend.sv
-    - core/frontend/instr_scan.sv
-    - core/frontend/instr_queue.sv
-    - core/frontend/bht.sv
-    - core/frontend/btb.sv
-    - core/frontend/ras.sv
-    - core/cache_subsystem/tag_cmp.sv
-    - core/cache_subsystem/cache_ctrl.sv
-    - core/cache_subsystem/amo_alu.sv
-    - core/cache_subsystem/wt_axi_adapter.sv
-    - core/cache_subsystem/wt_dcache_ctrl.sv
-    - core/cache_subsystem/wt_cache_subsystem.sv
-    - core/cache_subsystem/wt_dcache_missunit.sv
-    - core/cache_subsystem/cva6_icache.sv
-    - core/cache_subsystem/wt_dcache_wbuffer.sv
-    - core/cache_subsystem/wt_l15_adapter.sv
-    - core/cache_subsystem/wt_dcache_mem.sv
-    - core/cache_subsystem/cva6_icache_axi_wrapper.sv
-    - core/cache_subsystem/std_cache_subsystem.sv
-    - core/cache_subsystem/wt_dcache.sv
-    - corev_apu/clint/axi_lite_interface.sv
-    - corev_apu/clint/clint.sv
-    - corev_apu/fpga/src/axi2apb/src/axi2apb_wrap.sv
-    - corev_apu/fpga/src/axi2apb/src/axi2apb.sv
-    - corev_apu/fpga/src/axi2apb/src/axi2apb_64_32.sv
-    - corev_apu/fpga/src/axi_slice/src/axi_w_buffer.sv
-    - corev_apu/fpga/src/axi_slice/src/axi_b_buffer.sv
-    - corev_apu/fpga/src/axi_slice/src/axi_slice_wrap.sv
-    - corev_apu/fpga/src/axi_slice/src/axi_slice.sv
-    - corev_apu/fpga/src/axi_slice/src/axi_single_slice.sv
-    - corev_apu/fpga/src/axi_slice/src/axi_ar_buffer.sv
-    - corev_apu/fpga/src/axi_slice/src/axi_r_buffer.sv
-    - corev_apu/fpga/src/axi_slice/src/axi_aw_buffer.sv
-    - corev_apu/fpga/src/apb_timer/apb_timer.sv
-    - corev_apu/fpga/src/apb_timer/timer.sv
-    - corev_apu/src/axi_riscv_atomics/src/axi_riscv_amos.sv
-    - corev_apu/src/axi_riscv_atomics/src/axi_riscv_atomics.sv
-    - corev_apu/src/axi_riscv_atomics/src/axi_res_tbl.sv
-    - corev_apu/src/axi_riscv_atomics/src/axi_riscv_lrsc_wrap.sv
-    - corev_apu/src/axi_riscv_atomics/src/axi_riscv_amos_alu.sv
-    - corev_apu/src/axi_riscv_atomics/src/axi_riscv_lrsc.sv
-    - corev_apu/src/axi_riscv_atomics/src/axi_riscv_atomics_wrap.sv
-    - corev_apu/axi_mem_if/src/axi2mem.sv
-    - corev_apu/rv_plic/rtl/rv_plic_target.sv
-    - corev_apu/rv_plic/rtl/rv_plic_gateway.sv
-    - corev_apu/rv_plic/rtl/plic_regmap.sv
-    - corev_apu/rv_plic/rtl/plic_top.sv
-    - corev_apu/riscv-dbg/src/dmi_cdc.sv
-    - corev_apu/riscv-dbg/src/dmi_jtag.sv
-    - corev_apu/riscv-dbg/src/dmi_jtag_tap.sv
-    - corev_apu/riscv-dbg/src/dm_csrs.sv
-    - corev_apu/riscv-dbg/src/dm_mem.sv
-    - corev_apu/riscv-dbg/src/dm_sba.sv
-    - corev_apu/riscv-dbg/src/dm_top.sv
-    - corev_apu/riscv-dbg/debug_rom/debug_rom.sv
-    - corev_apu/register_interface/src/apb_to_reg.sv
-    - corev_apu/axi/src/axi_multicut.sv
-    - common/submodules/common_cells/src/cf_math_pkg.sv
-    - common/submodules/common_cells/src/deprecated/generic_fifo.sv
-    - common/submodules/common_cells/src/deprecated/pulp_sync.sv
-    - common/submodules/common_cells/src/deprecated/find_first_one.sv
-    - common/submodules/common_cells/src/rstgen_bypass.sv
-    - common/submodules/common_cells/src/rstgen.sv
-    - common/submodules/common_cells/src/stream_mux.sv
-    - common/submodules/common_cells/src/stream_demux.sv
-    - common/submodules/common_cells/src/stream_arbiter.sv
-    - common/submodules/common_cells/src/stream_arbiter_flushable.sv
-    - corev_apu/axi/src/axi_cut.sv
-    - corev_apu/axi/src/axi_join.sv
-    - corev_apu/axi/src/axi_delayer.sv
-    - corev_apu/axi/src/axi_to_axi_lite.sv
-    - corev_apu/axi/src/axi_id_prepend.sv
-    - corev_apu/axi/src/axi_atop_filter.sv
-    - corev_apu/axi/src/axi_err_slv.sv
-    - corev_apu/axi/src/axi_mux.sv
-    - corev_apu/axi/src/axi_demux.sv
-    - corev_apu/axi/src/axi_xbar.sv
-    - common/local/techlib/fpga/rtl/SyncSpRamBeNx64.sv
-    - common/submodules/common_cells/src/sync.sv
-    - common/submodules/common_cells/src/popcount.sv
-    - common/submodules/common_cells/src/unread.sv
-    - common/submodules/common_cells/src/cdc_2phase.sv
-    - common/submodules/common_cells/src/spill_register_flushable.sv
-    - common/submodules/common_cells/src/spill_register.sv
-    - common/submodules/common_cells/src/edge_detect.sv
-    - common/submodules/common_cells/src/fifo_v3.sv
-    - common/submodules/common_cells/src/deprecated/fifo_v2.sv
-    - common/submodules/common_cells/src/deprecated/fifo_v1.sv
-    - common/submodules/common_cells/src/lzc.sv
-    - common/submodules/common_cells/src/rr_arb_tree.sv
-    - common/submodules/common_cells/src/deprecated/rrarbiter.sv
-    - common/submodules/common_cells/src/stream_delay.sv
-    - common/submodules/common_cells/src/lfsr.sv
-    - common/submodules/common_cells/src/lfsr_8bit.sv
-    - common/submodules/common_cells/src/lfsr_16bit.sv
-    - common/submodules/common_cells/src/counter.sv
-    - common/submodules/common_cells/src/shift_reg.sv
-    - common/submodules/common_cells/src/exp_backoff.sv
-    - common/submodules/common_cells/src/addr_decode.sv
-    - common/submodules/common_cells/src/stream_register.sv
-    - corev_apu/src/tech_cells_generic/src/cluster_clock_inverter.sv
-    - corev_apu/src/tech_cells_generic/src/pulp_clock_mux2.sv
-    - target: not(cv32a6)
-      files:
-      - core/include/cv64a6_imafdc_sv39_config_pkg.sv
-    - target: cv32a6
-      files:
-      - core/include/cv32a6_imac_sv0_config_pkg.sv
-    - target: test
-      files:
-      - corev_apu/tb/ariane_soc_pkg.sv
-      - corev_apu/tb/ariane_axi_soc_pkg.sv
-      - corev_apu/tb/ariane_testharness.sv
-      - corev_apu/tb/ariane_peripherals.sv
-      - corev_apu/tb/common/uart.sv
-      - corev_apu/tb/common/SimDTM.sv
-      - corev_apu/tb/common/SimJTAG.sv
-      - corev_apu/bootrom/bootrom.sv
-      - corev_apu/tb/common/mock_uart.sv
-      - common/local/util/sram.sv
-    - target: not(synthesis)
-      files:
-        - common/local/util/instr_tracer.sv
-        - common/local/util/instr_tracer_if.sv
-        - common/local/util/instr_trace_item.svh
-        - common/local/util/ex_trace_item.svh
-    - target: all(fpga, xilinx)
-      files:
-      - corev_apu/fpga/src/ariane_peripherals_xilinx.sv
-      - corev_apu/fpga/src/ariane_xilinx.sv
-      - corev_apu/fpga/src/fan_ctrl.sv
-      - corev_apu/fpga/src/bootrom/bootrom.sv
-      - corev_apu/fpga/src/ariane-ethernet/ssio_ddr_in.sv
-      - corev_apu/fpga/src/ariane-ethernet/rgmii_soc.sv
-      - corev_apu/fpga/src/ariane-ethernet/axis_gmii_rx.sv
-      - corev_apu/fpga/src/ariane-ethernet/oddr.sv
-      - corev_apu/fpga/src/ariane-ethernet/axis_gmii_tx.sv
-      - corev_apu/fpga/src/ariane-ethernet/dualmem_widen8.sv
-      - corev_apu/fpga/src/ariane-ethernet/rgmii_phy_if.sv
-      - corev_apu/fpga/src/ariane-ethernet/dualmem_widen.sv
-      - corev_apu/fpga/src/ariane-ethernet/rgmii_lfsr.sv
-      - corev_apu/fpga/src/ariane-ethernet/rgmii_core.sv
-      - corev_apu/fpga/src/ariane-ethernet/eth_mac_1g.sv
-      - corev_apu/fpga/src/ariane-ethernet/eth_mac_1g_rgmii.sv
-      - corev_apu/fpga/src/ariane-ethernet/eth_mac_1g_rgmii_fifo.sv
-      - corev_apu/fpga/src/ariane-ethernet/iddr.sv
-      - corev_apu/fpga/src/ariane-ethernet/framing_top.sv
-      - corev_apu/fpga/src/apb_uart/src/apb_uart.vhd
-      - corev_apu/fpga/src/apb_uart/src/uart_transmitter.vhd
-      - corev_apu/fpga/src/apb_uart/src/uart_interrupt.vhd
-      - corev_apu/fpga/src/apb_uart/src/slib_mv_filter.vhd
-      - corev_apu/fpga/src/apb_uart/src/slib_input_filter.vhd
-      - corev_apu/fpga/src/apb_uart/src/slib_counter.vhd
-      - corev_apu/fpga/src/apb_uart/src/uart_receiver.vhd
-      - corev_apu/fpga/src/apb_uart/src/slib_input_sync.vhd
-      - corev_apu/fpga/src/apb_uart/src/slib_edge_detect.vhd
-      - corev_apu/fpga/src/apb_uart/src/slib_clock_div.vhd
-      - corev_apu/fpga/src/apb_uart/src/slib_fifo.vhd
-      - corev_apu/fpga/src/apb_uart/src/uart_baudgen.vhd
+      - core/include/config_pkg.sv
+      # Pick the right configuration by passing the right bender flag.
+      - target: cv64a6_imafdcv_sv39
+        files:
+          - core/include/cv64a6_imafdcv_sv39_config_pkg.sv
 
+      - target: cv64a6_imafdc_sv39
+        files:
+          - core/include/cv64a6_imafdc_sv39_config_pkg.sv
+
+      - target: cv64a6_imafdc_sv39_wb
+        files:
+          - core/include/cv64a6_imafdc_sv39_wb_config_pkg.sv
+
+      - target: cv64a6_imafdc_sv39_hpdcache
+        files:
+          - core/include/cv64a6_imafdc_sv39_hpdcache_config_pkg.sv
+
+      - target: cv64a6_imafdc_sv39_hpdcache_wb
+        files:
+          - core/include/cv64a6_imafdc_sv39_hpdcache_wb_config_pkg.sv
+
+      - target: cv64a6_imafdch_sv39
+        files:
+          - core/include/cv64a6_imafdch_sv39_config_pkg.sv
+
+      - target: cv64a6_imafdch_sv39_wb
+        files:
+          - core/include/cv64a6_imafdch_sv39_wb_config_pkg.sv
+
+      - target: cv32a6_imac_sv0
+        files:
+          - core/include/cv32a6_imac_sv0_config_pkg.sv
+
+      - target: cv32a6_imac_sv32
+        files:
+          - core/include/cv32a6_imac_sv32_config_pkg.sv
+
+      - target: cv32a6_imafc_sv32
+        files:
+          - core/include/cv32a6_imafc_sv32_config_pkg.sv
+
+      - target: cv32a60x
+        files:
+          - core/include/cv32a60x_config_pkg.sv
+
+      - target: cv32a65x
+        files:
+          - core/include/cv32a65x_config_pkg.sv
+
+      - target: cv64a60ax_cvfpu_uvm
+        files:
+          - core/include/cv64a60ax_config_pkg_cvfpu-uvm.sv
+
+      # General config infrastructure
+      - core/include/riscv_pkg.sv
+      - core/include/ariane_pkg.sv
+      - core/include/build_config_pkg.sv
+
+      - target: not(exclude_first_pass_decoder)
+        files:
+          - core/cva6_accel_first_pass_decoder_stub.sv
+
+      # MMU
+      - target: any(cv64a6_imafdcv_sv39, cv64a6_imafdc_sv39, cv64a6_imafdc_sv39_wb, cv64a6_imafdch_sv39, cv64a6_imafdc_sv39_hpdcache, cv64a6_imafdc_sv39_hpdcache_wb, cv64a6_imafdch_sv39_wb, cv32a6_imac_sv0, cv32a6_imac_sv32, cv32a6_imafc_sv32)
+        files:
+          - core/cva6_mmu/cva6_tlb.sv
+          - core/cva6_mmu/cva6_shared_tlb.sv
+          - core/cva6_mmu/cva6_mmu.sv
+          - core/cva6_mmu/cva6_ptw.sv
+
+      # Packages
+      - core/include/dummy_l15_pkg.sv
+      - core/include/wt_cache_pkg.sv
+      - core/include/std_cache_pkg.sv
+      - core/include/aes_pkg.sv
+
+      # Extension Interface
+      - core/cvxif_example/include/cvxif_instr_pkg.sv
+      - core/cvxif_fu.sv
+      - core/cvxif_issue_register_commit_if_driver.sv
+      - core/cvxif_compressed_if_driver.sv
+      - core/cvxif_example/cvxif_example_coprocessor.sv
+      - core/cvxif_example/instr_decoder.sv
+
+      # Tracing
+      - core/cva6_rvfi_probes.sv
+      - core/cva6_fifo_v3.sv
+      # Top-level source files (not necessarily instantiated at the top of the cva6).
+      - core/cva6.sv
+      - core/aes.sv
+      - core/alu.sv
+      - core/alu_wrapper.sv
+      - core/fpu_wrap.sv # depends on fpnew_pkg, above
+      - core/branch_unit.sv
+      - core/compressed_decoder.sv
+      - core/controller.sv
+      - core/csr_buffer.sv
+      - core/csr_regfile.sv
+      - core/decoder.sv
+      - core/ex_stage.sv
+      - core/acc_dispatcher.sv
+      - core/instr_realign.sv
+      - core/id_stage.sv
+      - core/issue_read_operands.sv
+      - core/issue_stage.sv
+      - core/load_unit.sv
+      - core/load_store_unit.sv
+      - core/lsu_bypass.sv
+      - core/mult.sv
+      - core/multiplier.sv
+      - core/serdiv.sv
+      - core/perf_counters.sv
+      - core/ariane_regfile_ff.sv
+      - core/ariane_regfile_fpga.sv
+      - core/scoreboard.sv
+      - core/raw_checker.sv
+      - core/store_buffer.sv
+      - core/amo_buffer.sv
+      - core/store_unit.sv
+      - core/commit_stage.sv
+      - core/axi_shim.sv
+
+      # Frontend (i.e., fetch, decode, dispatch)
+      - core/frontend/btb.sv
+      - core/frontend/bht.sv
+      - core/frontend/bht2lvl.sv
+      - core/frontend/ras.sv
+      - core/frontend/instr_scan.sv
+      - core/frontend/instr_queue.sv
+      - core/frontend/frontend.sv
+      # Cache subsystem(s)
+      - core/cache_subsystem/wt_dcache_ctrl.sv
+      - core/cache_subsystem/wt_dcache_mem.sv
+      - core/cache_subsystem/wt_dcache_missunit.sv
+      - core/cache_subsystem/wt_dcache_wbuffer.sv
+      - core/cache_subsystem/wt_dcache.sv
+      - core/cache_subsystem/wt_cache_subsystem.sv
+      - core/cache_subsystem/wt_axi_adapter.sv
+      - core/cache_subsystem/cva6_icache.sv
+      - core/cache_subsystem/tag_cmp.sv
+      - core/cache_subsystem/cva6_icache_axi_wrapper.sv
+      - core/cache_subsystem/axi_adapter.sv
+      - core/cache_subsystem/miss_handler.sv
+      - core/cache_subsystem/cache_ctrl.sv
+      - core/cache_subsystem/std_nbdcache.sv
+      - core/cache_subsystem/std_cache_subsystem.sv
+      # HPDCache sources
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_pkg.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/hpdcache_mem_resp_demux.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/hpdcache_mem_to_axi_read.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/hpdcache_mem_to_axi_write.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/hpdcache_mem_req_read_arbiter.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/hpdcache_mem_req_write_arbiter.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_demux.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_lfsr.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_sync_buffer.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_fifo_reg.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_fifo_reg_initialized.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_fxarb.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_rrarb.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_mux.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_decoder.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_1hot_to_binary.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_prio_1hot_encoder.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_prio_bin_encoder.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_sram.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_sram_wbyteenable.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_sram_wmask.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_regbank_wbyteenable_1rw.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_regbank_wmask_1rw.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_data_downsize.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_data_upsize.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/hpdcache_data_resize.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hwpf_stride/hwpf_stride_pkg.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hwpf_stride/hwpf_stride.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hwpf_stride/hwpf_stride_arb.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hwpf_stride/hwpf_stride_wrapper.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_amo.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_cmo.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_core_arbiter.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_ctrl.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_ctrl_pe.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_memctrl.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_miss_handler.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_mshr.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_rtab.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_uncached.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_victim_plru.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_victim_random.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_victim_sel.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_wbuf.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_flush.sv
+      - core/cache_subsystem/hpdcache/rtl/src/hpdcache_cbuf.sv
+      # HPDCache integration
+      - core/cache_subsystem/cva6_hpdcache_if_adapter.sv
+      - core/cache_subsystem/cva6_hpdcache_subsystem_axi_arbiter.sv
+      - core/cache_subsystem/cva6_hpdcache_subsystem.sv
+      - core/cache_subsystem/cva6_hpdcache_wrapper.sv
+      # HPDCache ECC
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_pkg.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_36_29_dec.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_36_29_enc.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_39_32_dec.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_39_32_enc.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_55_48_dec.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_55_48_enc.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_72_64_dec.sv
+      - core/cache_subsystem/hpdcache/rtl/src/utils/ecc/prim_secded_72_64_enc.sv
+      # HPDCache SRAM models
+      - core/cache_subsystem/hpdcache/rtl/src/common/macros/behav/hpdcache_sram_1rw.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/macros/behav/hpdcache_sram_ecc_1rw.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/macros/behav/hpdcache_sram_wbyteenable_1rw.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/macros/behav/hpdcache_sram_wbyteenable_ecc_1rw.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/macros/behav/hpdcache_sram_wmask_1rw.sv
+      - core/cache_subsystem/hpdcache/rtl/src/common/macros/behav/hpdcache_sram_wmask_ecc_1rw.sv
+
+      # Physical Memory Protection
+      - core/pmp/src/pmp.sv
+      - core/pmp/src/pmp_entry.sv
+      - core/pmp/src/pmp_data_if.sv
+
+      - include_dirs:
+        - common/local/util
+        files:
+          - common/local/util/sram.sv
+
+      - target: not(all(fpga, xilinx))
+        include_dirs:
+          - common/local/util
+        files:
+          - common/local/util/tc_sram_wrapper.sv
+          - common/local/util/sram_cache.sv
+          - common/local/util/tc_sram_wrapper_cache_techno.sv
+
+      - target: all(fpga, xilinx)
+        include_dirs:
+          - common/local/util
+        files:
+          - common/local/util/sram_cache.sv
+          - common/local/util/tc_sram_fpga_wrapper.sv
+          - vendor/pulp-platform/fpga-support/rtl/SyncSpRamBeNx64.sv
+
+      - target: not(synthesis)
+        include_dirs:
+          - core/include
+          - common/local/util
+        files:
+          # Tracer (behavioral code, not RTL)
+          - core/include/instr_tracer_pkg.sv
+          - common/local/util/instr_tracer.sv

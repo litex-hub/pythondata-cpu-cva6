@@ -24,7 +24,7 @@ module tb import ariane_pkg::*; import wt_cache_pkg::*; import tb_pkg::*; #()();
   timeprecision 1ps;
 
   // memory configuration (64bit words)
-  parameter MemBytes          = 2**DCACHE_INDEX_WIDTH * 4 * 32;
+  parameter MemBytes          = 2**CVA6Cfg.DCACHE_INDEX_WIDTH * 4 * 32;
   parameter MemWords          = MemBytes>>3;
 
   // noncacheable portion
@@ -115,7 +115,7 @@ module tb import ariane_pkg::*; import wt_cache_pkg::*; import tb_pkg::*; #()();
   } reservation_t;
 
   logic [63:0] act_paddr[1:0];
-  riscv::xlen_t exp_rdata[1:0];
+  logic [riscv::XLEN-1:0] exp_rdata[1:0];
   logic [63:0] exp_paddr[1:0];
   logic [63:0] amo_act_mem;
   logic [63:0] amo_shadow;
@@ -279,7 +279,7 @@ module tb import ariane_pkg::*; import wt_cache_pkg::*; import tb_pkg::*; #()();
           amo_op_a_u = $unsigned(amo_shadow[31:0]);
           amo_op_b_u = $unsigned(amo_req_i.operand_b[31:0]);
 
-          // The result that is expected to be returned by AMO and evantually to be stored in rd.
+          // The result that is expected to be returned by AMO and eventually to be stored in rd.
           // For most AMOs, this is the previous memory content.
           // RISC-V spec requires: "For RV64, 32-bit AMOs always sign-extend the value placed in rd."
           amo_exp_result = amo_op_a;
@@ -376,32 +376,8 @@ module tb import ariane_pkg::*; import wt_cache_pkg::*; import tb_pkg::*; #()();
 // MUT
 ///////////////////////////////////////////////////////////////////////////////
 
-  localparam ariane_cfg_t ArianeDefaultConfig = '{
-    RASDepth: 2,
-    BTBEntries: 32,
-    BHTEntries: 128,
-    // idempotent region
-    NrNonIdempotentRules:  0,
-    NonIdempotentAddrBase: {64'b0},
-    NonIdempotentLength:   {64'b0},
-    // executable region
-    NrExecuteRegionRules:  0,
-    ExecuteRegionAddrBase: {64'h0},
-    ExecuteRegionLength:   {64'h0},
-    // cached region
-    NrCachedRegionRules:   1,
-    CachedRegionAddrBase:  {CachedAddrBeg},//1/8th of the memory is NC
-    CachedRegionLength:    {CachedAddrEnd-CachedAddrBeg+64'b1},
-    // cache config
-    AxiCompliant:          1'b1,
-    SwapEndianess:         1'b0,
-    // debug
-    DmBaseAddress:         64'h0,
-    NrPMPEntries:          0
-  };
-
   wt_cache_subsystem  #(
-    .ArianeCfg    ( ArianeDefaultConfig ),
+    .CVA6Cfg      ( ariane_pkg::CVA6DefaultCfg ),
     .AxiAddrWidth ( TbAxiAddrWidthFull  ),
     .AxiDataWidth ( TbAxiDataWidthFull  ),
     .AxiIdWidth   ( TbAxiIdWidthFull    ),
@@ -833,9 +809,9 @@ axi_riscv_atomics_wrap #(
     seq_type     = '{IDLE_SEQ, IDLE_SEQ, LINEAR_SEQ};
     req_rate     = '{default:100};
 
-    runSeq((CachedAddrBeg>>3)+(2**(DCACHE_INDEX_WIDTH-3))*DCACHE_SET_ASSOC);
+    runSeq((CachedAddrBeg>>3)+(2**(CVA6Cfg.DCACHE_INDEX_WIDTH-3))*DCACHE_SET_ASSOC);
     seq_type     = '{LINEAR_SEQ, IDLE_SEQ, IDLE_SEQ};
-    runSeq(0,(CachedAddrBeg>>3)+(2**(DCACHE_INDEX_WIDTH-3))*DCACHE_SET_ASSOC);
+    runSeq(0,(CachedAddrBeg>>3)+(2**(CVA6Cfg.DCACHE_INDEX_WIDTH-3))*DCACHE_SET_ASSOC);
     flushCache();
     tb_mem_port_t::check_mem();
 

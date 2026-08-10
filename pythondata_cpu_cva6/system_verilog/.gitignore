@@ -1,3 +1,5 @@
+*.swp
+*.swo
 site/*
 *.ucdb
 covhtmlreport/*
@@ -16,10 +18,10 @@ src/moore.sv
 build/*
 /tmp*
 *.dasm
-/Bender.lock
 /Bender.local
 build/
 *.vcd
+*.fsdb
 *.log
 *.out
 *.jou
@@ -40,3 +42,18 @@ tb/riscv-isa-sim/
 work-*/*
 install/
 xrun_results/
+/core/include/hwconfig_config_pkg.sv
+__pycache__
+.bender/
+Bender.lock
+/tools/
+/util/toolchain-builder/src/
+/util/toolchain-builder/build/
+# Both following lines are needed to list contents of ISA manual build dir.
+!/vendor/riscv/riscv-isa-manual/build/
+!/vendor/riscv/riscv-isa-manual/build/*
+/config/gen_from_riscv_config/hwconfig/linker/link.ld
+/config/gen_from_riscv_config/hwconfig/spike/spike.yaml
+/verif/sim/encaps.traces
+/verif/sim/iti.traces
+/verif/sim/verilator.fst.hier

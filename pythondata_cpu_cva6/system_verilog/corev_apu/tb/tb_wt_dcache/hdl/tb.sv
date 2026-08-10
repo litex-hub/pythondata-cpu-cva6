@@ -32,35 +32,11 @@ module tb import tb_pkg::*; import ariane_pkg::*; import wt_cache_pkg::*; #()();
   timeprecision 1ps;
 
   // memory configuration (64bit words)
-  parameter MemBytes          = 2**DCACHE_INDEX_WIDTH * 4 * 32;
+  parameter MemBytes          = 2**CVA6Cfg.DCACHE_INDEX_WIDTH * 4 * 32;
   parameter MemWords          = MemBytes>>3;
   // noncacheable portion
   parameter logic [63:0] CachedAddrBeg = MemBytes>>3;//1/8th of the memory is NC
   parameter logic [63:0] CachedAddrEnd = 64'hFFFF_FFFF_FFFF_FFFF;
-
-  localparam ariane_cfg_t ArianeDefaultConfig = '{
-    RASDepth: 2,
-    BTBEntries: 32,
-    BHTEntries: 128,
-    // idempotent region
-    NrNonIdempotentRules:  0,
-    NonIdempotentAddrBase: {64'b0},
-    NonIdempotentLength:   {64'b0},
-    // executable region
-    NrExecuteRegionRules:  0,
-    ExecuteRegionAddrBase: {64'h0},
-    ExecuteRegionLength:   {64'h0},
-    // cached region
-    NrCachedRegionRules:   1,
-    CachedRegionAddrBase:  {CachedAddrBeg},//1/8th of the memory is NC
-    CachedRegionLength:    {CachedAddrEnd-CachedAddrBeg+64'b1},
-    // cache config
-    AxiCompliant:          1'b1,
-    SwapEndianess:         1'b0,
-    // debug
-    DmBaseAddress:         64'h0,
-    NrPMPEntries:          0
-  };
 
   // contention and invalidation rates (in %)
   parameter MemRandHitRate   = 75;
@@ -226,7 +202,7 @@ module tb import tb_pkg::*; import ariane_pkg::*; import wt_cache_pkg::*; #()();
 ///////////////////////////////////////////////////////////////////////////////
 
   wt_dcache  #(
-    .ArianeCfg ( ArianeDefaultConfig )
+    .CVA6Cfg ( ariane_pkg::CVA6DefaultCfg )
   ) i_dut (
     .clk_i           ( clk_i           ),
     .rst_ni          ( rst_ni          ),
@@ -570,9 +546,9 @@ module tb import tb_pkg::*; import ariane_pkg::*; import wt_cache_pkg::*; #()();
     inv_rand_en  = 0;
     seq_type     = '{IDLE_SEQ, IDLE_SEQ, LINEAR_SEQ};
     req_rate     = '{default:100};
-    runSeq((CachedAddrBeg>>3)+(2**(DCACHE_INDEX_WIDTH-3))*DCACHE_SET_ASSOC,0);
+    runSeq((CachedAddrBeg>>3)+(2**(CVA6Cfg.DCACHE_INDEX_WIDTH-3))*DCACHE_SET_ASSOC,0);
     seq_type     = '{LINEAR_SEQ, IDLE_SEQ, IDLE_SEQ};
-    runSeq(0,(CachedAddrBeg>>3)+(2**(DCACHE_INDEX_WIDTH-3))*DCACHE_SET_ASSOC);
+    runSeq(0,(CachedAddrBeg>>3)+(2**(CVA6Cfg.DCACHE_INDEX_WIDTH-3))*DCACHE_SET_ASSOC);
     flushCache();
     memCheck();
     ///////////////////////////////////////////////

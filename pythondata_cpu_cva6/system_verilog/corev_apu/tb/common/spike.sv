@@ -12,111 +12,152 @@
 // Date: 3/11/2018
 // Description: Wrapped Spike Model for Tandem Verification
 
-import uvm_pkg::*;
-
+// Pre-processor macros
+`ifdef VERILATOR
+`include "custom_uvm_macros.svh"
+`else
 `include "uvm_macros.svh"
+`endif
 
-import "DPI-C" function int spike_create(string filename, longint unsigned dram_base, int unsigned size);
-
-typedef riscv::commit_log_t riscv_commit_log_t;
-import "DPI-C" function void spike_tick(output riscv_commit_log_t commit_log);
-
-import "DPI-C" function void clint_tick();
+import ariane_pkg::*;
+`ifndef VERILATOR
+import uvm_pkg::*;
+`endif
+import riscv::*;
+import uvma_rvfi_pkg::*;
+import uvma_core_cntrl_pkg::*;
+import uvmc_rvfi_reference_model_pkg::*;
+import uvmc_rvfi_scoreboard_pkg::*;
+import uvma_cva6pkg_utils_pkg::*;
 
 module spike #(
-    parameter longint unsigned DramBase = 'h8000_0000,
-    parameter int unsigned     Size     = 64 * 1024 * 1024 // 64 Mega Byte
+  parameter config_pkg::cva6_cfg_t CVA6Cfg = cva6_config_pkg::cva6_cfg,
+  parameter type rvfi_instr_t = logic,
+  parameter type rvfi_csr_t = logic,
+  parameter longint unsigned DramBase = 'h8000_0000,
+  parameter int unsigned     Size     = 64 * 1024 * 1024 // 64 Mega Byte
 )(
-    input logic       clk_i,
-    input logic       rst_ni,
-    input logic       clint_tick_i,
-    input ariane_pkg::scoreboard_entry_t [ariane_pkg::NR_COMMIT_PORTS-1:0] commit_instr_i,
-    input logic [ariane_pkg::NR_COMMIT_PORTS-1:0]                          commit_ack_i,
-    input ariane_pkg::exception_t                                          exception_i,
-    input logic [ariane_pkg::NR_COMMIT_PORTS-1:0][4:0]                     waddr_i,
-    input logic [ariane_pkg::NR_COMMIT_PORTS-1:0][63:0]                    wdata_i,
-    input riscv::priv_lvl_t                                                priv_lvl_i
+    input logic                                     clk_i,
+    input logic                                     rst_ni,
+    input logic                                     clint_tick_i,
+    input rvfi_instr_t[CVA6Cfg.NrCommitPorts-1:0]   rvfi_i,
+    input rvfi_csr_t                                rvfi_csr_i,
+    output logic[31:0]                              end_of_test_o
 );
-    static uvm_cmdline_processor uvcl = uvm_cmdline_processor::get_inst();
-
     string binary = "";
+    string rtl_isa = "";
 
-    logic fake_clk;
-
-    logic clint_tick_q, clint_tick_qq, clint_tick_qqq, clint_tick_qqqq;
+    st_core_cntrl_cfg st;
+    bit sim_finished;
+    string core_name = "cva6";
 
     initial begin
-        void'(uvcl.get_arg_value("+PRELOAD=", binary));
-        assert(binary != "") else $error("We need a preloaded binary for tandem verification");
-        void'(spike_create(binary, DramBase, Size));
+        st = cva6pkg_to_core_cntrl_cfg(st);
+        st.boot_addr_valid = 1'b1;
+        st.boot_addr = 64'h0x10000;
+
+        if ($test$plusargs("core_name")) begin
+          $value$plusargs("core_name=%s", core_name);
+          `uvm_info("SPIKE", $sformatf("### core_name = '%s'", core_name), UVM_LOW);
+        end
+
+        rvfi_initialize(st);
+        rvfi_initialize_spike(core_name, st);
+
     end
 
-    riscv_commit_log_t commit_log;
-    logic [31:0] instr;
+    // There is a need of delayed rvfi as the 'csr'_q signal does not have the
+    // written value
+    logic [63:0] pc64;
+    logic [31:0] rtl_instr;
+    logic [31:0] spike_instr;
+    string       cause;
+    string instr;
+    st_rvfi s_core [CVA6Cfg.NrCommitPorts-1:0];
+    bit core_valid [CVA6Cfg.NrCommitPorts-1:0];
+
+    `define GET_RVFI_CSR(CSR_ADDR, CSR_NAME) \
+        s_core[i].csr_valid[CSR_ADDR] <= 1; \
+        s_core[i].csr_addr [CSR_ADDR] <= CSR_ADDR;\
+        s_core[i].csr_rdata[CSR_ADDR] <= rvfi_csr_i.``CSR_NAME``.rdata;\
+        s_core[i].csr_rmask[CSR_ADDR] <= rvfi_csr_i.``CSR_NAME``.rmask;\
+        s_core[i].csr_wdata[CSR_ADDR] <= rvfi_csr_i.``CSR_NAME``.wdata;\
+        s_core[i].csr_wmask[CSR_ADDR] <= rvfi_csr_i.``CSR_NAME``.wmask;
 
     always_ff @(posedge clk_i) begin
         if (rst_ni) begin
 
-            for (int i = 0; i < ariane_pkg::NR_COMMIT_PORTS; i++) begin
-                if ((commit_instr_i[i].valid && commit_ack_i[i]) || (commit_instr_i[i].valid && exception_i.valid)) begin
-                    spike_tick(commit_log);
-                    instr = (commit_log.instr[1:0] != 2'b11) ? {16'b0, commit_log.instr[15:0]} : commit_log.instr;
-                    // $display("\x1B[32m%h %h\x1B[0m", commit_log.pc, instr);
-                    // $display("%p", commit_log);
-                    // $display("\x1B[37m%h %h\x1B[0m", commit_instr_i[i].pc, commit_instr_i[i].ex.tval[31:0]);
-                    assert (commit_log.pc === commit_instr_i[i].pc) else begin
-                        $warning("\x1B[33m[Tandem] PCs Mismatch\x1B[0m");
-                        // $stop;
+            for (int i = 0; i < CVA6Cfg.NrCommitPorts; i++) begin
+
+                if (rvfi_i[i].valid || rvfi_i[i].trap) begin
+                    core_valid[i] <= 1;
+                    s_core[i].order <= rvfi_i[i].order;
+                    s_core[i].insn  <= rvfi_i[i].insn;
+                    s_core[i].trap  <= rvfi_i[i].trap;
+                    s_core[i].trap <= (rvfi_i[i].cause << 1) | rvfi_i[i].trap[0];
+                    s_core[i].halt  <= rvfi_i[i].halt;
+                    s_core[i].intr  <= rvfi_i[i].intr;
+                    s_core[i].mode  <= rvfi_i[i].mode;
+                    s_core[i].ixl   <= rvfi_i[i].ixl;
+                    s_core[i].rs1_addr   <= rvfi_i[i].rs1_addr;
+                    s_core[i].rs2_addr   <= rvfi_i[i].rs2_addr;
+                    s_core[i].rs1_rdata  <= rvfi_i[i].rs1_rdata;
+                    s_core[i].rs2_rdata  <= rvfi_i[i].rs2_rdata;
+                    s_core[i].rd1_addr   <= rvfi_i[i].rd_addr;
+                    s_core[i].rd1_wdata  <= rvfi_i[i].rd_wdata;
+                    s_core[i].pc_rdata   <= rvfi_i[i].pc_rdata;
+                    s_core[i].pc_wdata   <= rvfi_i[i].pc_wdata;
+                    s_core[i].mem_addr   <= rvfi_i[i].mem_addr;
+                    s_core[i].mem_rmask  <= rvfi_i[i].mem_rmask;
+                    s_core[i].mem_wmask  <= rvfi_i[i].mem_wmask;
+                    s_core[i].mem_rdata  <= rvfi_i[i].mem_rdata;
+                    s_core[i].mem_wdata  <= rvfi_i[i].mem_wdata;
+
+
+                    `GET_RVFI_CSR (CSR_MSTATUS      , mstatus     )
+                    `GET_RVFI_CSR (CSR_MCAUSE       , mcause      )
+                    `GET_RVFI_CSR (CSR_MEPC         , mepc        )
+                    `GET_RVFI_CSR (CSR_MTVEC        , mtvec       )
+                    `GET_RVFI_CSR (CSR_MISA         , misa        )
+                    `GET_RVFI_CSR (CSR_MTVAL        , mtval       )
+                    `GET_RVFI_CSR (CSR_MIDELEG      , mideleg     )
+                    `GET_RVFI_CSR (CSR_MEDELEG      , medeleg     )
+                    `GET_RVFI_CSR (CSR_SATP         , satp        )
+                    `GET_RVFI_CSR (CSR_MIE          , mie         )
+                    `GET_RVFI_CSR (CSR_STVEC        , stvec       )
+                    `GET_RVFI_CSR (CSR_SSCRATCH     , sscratch    )
+                    `GET_RVFI_CSR (CSR_SEPC         , sepc        )
+                    `GET_RVFI_CSR (CSR_MSCRATCH     , mscratch    )
+                    `GET_RVFI_CSR (CSR_STVAL        , stval       )
+                    `GET_RVFI_CSR (CSR_SCAUSE       , scause      )
+                    `GET_RVFI_CSR (CSR_PMPCFG0      , pmpcfg0     )
+                    `GET_RVFI_CSR (CSR_PMPCFG1      , pmpcfg1     )
+                    `GET_RVFI_CSR (CSR_PMPCFG2      , pmpcfg2     )
+                    `GET_RVFI_CSR (CSR_PMPCFG3      , pmpcfg3     )
+                    for (int j = 0; j < 16; j++) begin
+                        `GET_RVFI_CSR (CSR_PMPADDR0 + j  , pmpaddr[j])
                     end
-                    assert (commit_log.was_exception === exception_i.valid) else begin
-                        $warning("\x1B[33m[Tandem] Exception not detected\x1B[0m");
-                        // $stop;
-                        $display("Spike: %p", commit_log);
-                        $display("Ariane: %p", commit_instr_i[i]);
-                    end
-                    if (!exception_i.valid) begin
-                        assert (commit_log.priv === priv_lvl_i) else begin
-                            $warning("\x1B[33m[Tandem] Privilege level mismatches\x1B[0m");
-                            // $stop;
-                            $display("\x1B[37m %2d == %2d @ PC %h\x1B[0m", priv_lvl_i, commit_log.priv, commit_log.pc);
-                        end
-                        assert (instr === commit_instr_i[i].ex.tval) else begin
-                            $warning("\x1B[33m[Tandem] Decoded instructions mismatch\x1B[0m");
-                            // $stop;
-                            $display("\x1B[37m%h === %h @ PC %h\x1B[0m", commit_instr_i[i].ex.tval, instr, commit_log.pc);
-                        end
-                        // TODO(zarubaf): Adapt for floating point instructions
-                        if (commit_instr_i[i].rd != 0) begin
-                            // check the return value
-                            // $display("\x1B[37m%h === %h\x1B[0m", commit_instr_i[i].rd, commit_log.rd);
-                            assert (waddr_i[i] === commit_log.rd) else begin
-                                $warning("\x1B[33m[Tandem] Destination register mismatches\x1B[0m");
-                                // $stop;
-                            end
-                            assert (wdata_i[i] === commit_log.data) else begin
-                                $warning("\x1B[33m[Tandem] Write back data mismatches\x1B[0m");
-                                $display("\x1B[37m%h === %h @ PC %h\x1B[0m", wdata_i[i], commit_log.data, commit_log.pc);
-                            end
-                        end
-                    end
+                    `GET_RVFI_CSR (CSR_MINSTRET     , instret     )
+                    `GET_RVFI_CSR (CSR_MINSTRETH    , instreth    )
+                    `GET_RVFI_CSR (CSR_MSTATUSH     , mstatush    )
+                    `GET_RVFI_CSR (CSR_MIP          , mip         )
+                    `GET_RVFI_CSR (CSR_MCYCLE       , mcycle      )
+                end
+                else begin
+                    core_valid[i] <= 0;
+                end
+
+                if (core_valid[i] && !sim_finished) begin
+                    st_rvfi core, reference_model;
+                    core = s_core[i];
+
+                    rvfi_spike_step(core, reference_model);
+                    rvfi_compare(core, reference_model);
+
+                    end_of_test_o = reference_model.halt;
+                    sim_finished = reference_model.halt[0];
                 end
             end
-        end
-    end
-
-    // we want to schedule the timer increment at the end of this cycle
-    assign #1ps fake_clk = clk_i;
-
-    always_ff @(posedge fake_clk) begin
-        clint_tick_q <= clint_tick_i;
-        clint_tick_qq <= clint_tick_q;
-        clint_tick_qqq <= clint_tick_qq;
-        clint_tick_qqqq <= clint_tick_qqq;
-    end
-
-    always_ff @(posedge clint_tick_qqqq) begin
-        if (rst_ni) begin
-            void'(clint_tick());
         end
     end
 endmodule

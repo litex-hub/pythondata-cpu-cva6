@@ -1,12 +1,6 @@
 [submodule "corev_apu/axi_mem_if"]
 	path = corev_apu/axi_mem_if
 	url = https://github.com/pulp-platform/axi_mem_if.git
-[submodule "common/submodules/common_cells"]
-	path = common/submodules/common_cells
-	url = https://github.com/pulp-platform/common_cells.git
-[submodule "corev_apu/axi"]
-	path = corev_apu/axi
-	url = https://github.com/pulp-platform/axi.git
 [submodule "corev_apu/register_interface"]
 	path = corev_apu/register_interface
 	url = https://github.com/pulp-platform/register_interface.git
@@ -22,18 +16,9 @@
 [submodule "corev_apu/fpga/src/axi_slice"]
 	path = corev_apu/fpga/src/axi_slice
 	url = https://github.com/pulp-platform/axi_slice.git
-[submodule "corev_apu/src/tech_cells_generic"]
-	path = corev_apu/src/tech_cells_generic
-	url = https://github.com/pulp-platform/tech_cells_generic.git
-[submodule "core/fpu"]
-	path = core/fpu
-	url = https://github.com/pulp-platform/fpnew.git
 [submodule "corev_apu/fpga/src/ariane-ethernet"]
 	path = corev_apu/fpga/src/ariane-ethernet
 	url = https://github.com/lowRISC/ariane-ethernet.git
-[submodule "corev_apu/src/axi_riscv_atomics"]
-	path = corev_apu/src/axi_riscv_atomics
-	url = https://github.com/pulp-platform/axi_riscv_atomics.git
 [submodule "corev_apu/riscv-dbg"]
 	path = corev_apu/riscv-dbg
 	url = https://github.com/pulp-platform/riscv-dbg.git
@@ -43,9 +28,27 @@
 [submodule "corev_apu/fpga/src/apb_timer"]
 	path = corev_apu/fpga/src/apb_timer
 	url = https://github.com/pulp-platform/apb_timer.git
-[submodule "corev_apu/tb/dromajo"]
-	path = corev_apu/tb/dromajo
-	url = https://github.com/kabylkas/dromajo.git
 [submodule "corev_apu/tb/common_verification"]
 	path = corev_apu/tb/common_verification
 	url = https://github.com/pulp-platform/common_verification.git
+[submodule "verif/core-v-verif"]
+	path = verif/core-v-verif
+	url = https://github.com/openhwgroup/core-v-verif
+[submodule "core/cvfpu"]
+	path = core/cvfpu
+	url = https://github.com/openhwgroup/cvfpu.git
+[submodule "core/cache_subsystem/hpdcache"]
+	path = core/cache_subsystem/hpdcache
+	url = https://github.com/openhwgroup/cv-hpdcache.git
+[submodule "verif/sim/dv"]
+	path = verif/sim/dv
+	url = https://github.com/google/riscv-dv.git
+[submodule "docs/06_cv32a65x_riscv/riscv-isa-manual"]
+	path = docs/riscv-isa/riscv-isa-manual
+	url = https://github.com/riscv/riscv-isa-manual.git
+[submodule "corev_apu/fpga/src/apb"]
+	path = corev_apu/fpga/src/apb
+	url = https://github.com/pulp-platform/apb.git
+[submodule "corev_apu/fpga/src/gpio"]
+	path = corev_apu/fpga/src/gpio
+	url = https://github.com/pulp-platform/gpio.git

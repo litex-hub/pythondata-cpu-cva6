@@ -19,10 +19,6 @@ package ariane_soc;
 
   localparam NrSlaves = 2; // actually masters, but slaves on the crossbar
 
-  // 4 is recommended by AXI standard, so lets stick to it, do not change
-  localparam IdWidth   = 4;
-  localparam IdWidthSlave = IdWidth + $clog2(NrSlaves);
-
   typedef enum int unsigned {
     DRAM     = 0,
     GPIO     = 1,
@@ -33,11 +29,11 @@ package ariane_soc;
     PLIC     = 6,
     CLINT    = 7,
     ROM      = 8,
-    Debug    = 9
+    Debug    = 9,
+    HPS      = 10
   } axi_slaves_t;
 
   localparam NB_PERIPHERALS = Debug + 1;
-
 
   localparam logic[63:0] DebugLength    = 64'h1000;
   localparam logic[63:0] ROMLength      = 64'h10000;
@@ -48,7 +44,12 @@ package ariane_soc;
   localparam logic[63:0] SPILength      = 64'h800000;
   localparam logic[63:0] EthernetLength = 64'h10000;
   localparam logic[63:0] GPIOLength     = 64'h1000;
+  localparam logic[63:0] HPSLength      = 64'h800000;
+`ifdef NEXYS_VIDEO
+  localparam logic[63:0] DRAMLength     = 64'h20000000; // 512MByte of DDR on Nexys video board
+`else
   localparam logic[63:0] DRAMLength     = 64'h40000000; // 1GByte of DDR (split between two chips on Genesys2)
+`endif
   localparam logic[63:0] SRAMLength     = 64'h1800000;  // 24 MByte of SRAM
   // Instantiate AXI protocol checkers
   localparam bit GenProtocolChecker = 1'b0;
@@ -63,33 +64,11 @@ package ariane_soc;
     SPIBase      = 64'h2000_0000,
     EthernetBase = 64'h3000_0000,
     GPIOBase     = 64'h4000_0000,
-    DRAMBase     = 64'h8000_0000
+    DRAMBase     = 64'h8000_0000,
+    HPSBase      = 64'hFF80_0000
   } soc_bus_start_t;
 
   localparam NrRegion = 1;
   localparam logic [NrRegion-1:0][NB_PERIPHERALS-1:0] ValidRule = {{NrRegion * NB_PERIPHERALS}{1'b1}};
-
-  localparam ariane_pkg::ariane_cfg_t ArianeSocCfg = '{
-    RASDepth: 2,
-    BTBEntries: 32,
-    BHTEntries: 128,
-    // idempotent region
-    NrNonIdempotentRules:  1,
-    NonIdempotentAddrBase: {64'b0},
-    NonIdempotentLength:   {DRAMBase},
-    NrExecuteRegionRules:  3,
-    ExecuteRegionAddrBase: {DRAMBase,   ROMBase,   DebugBase},
-    ExecuteRegionLength:   {DRAMLength, ROMLength, DebugLength},
-    // cached region
-    NrCachedRegionRules:    1,
-    CachedRegionAddrBase:  {DRAMBase},
-    CachedRegionLength:    {DRAMLength},
-    //  cache config
-    AxiCompliant:           1'b1,
-    SwapEndianess:          1'b0,
-    // debug
-    DmBaseAddress:          DebugBase,
-    NrPMPEntries:           8
-  };
 
 endpackage
