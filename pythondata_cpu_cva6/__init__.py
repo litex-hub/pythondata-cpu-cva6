@@ -4,30 +4,30 @@ data_location = os.path.join(__dir__, "system_verilog")
 src = "https://github.com/openhwgroup/cva6"
 
 # Module version
-version_str = "4.2.0.post435"
-version_tuple = (4, 2, 0, 435)
+version_str = "4.2.0.post5856"
+version_tuple = (4, 2, 0, 5856)
 try:
     from packaging.version import Version as V
-    pversion = V("4.2.0.post435")
+    pversion = V("4.2.0.post5856")
 except ImportError:
     pass
 
 # Data version info
-data_version_str = "4.2.0.post293"
-data_version_tuple = (4, 2, 0, 293)
+data_version_str = "4.2.0.post5714"
+data_version_tuple = (4, 2, 0, 5714)
 try:
     from packaging.version import Version as V
-    pdata_version = V("4.2.0.post293")
+    pdata_version = V("4.2.0.post5714")
 except ImportError:
     pass
-data_git_hash = "c5947082c48a673b822d51b1deb2cafc2cecab31"
-data_git_describe = "v4.2.0-293-gc5947082"
+data_git_hash = "c4c412a9f8c3b9f21ca7f7b6c58b612ec2afe724"
+data_git_describe = "v4.2.0-5714-gc4c412a9"
 data_git_msg = """\
-commit c5947082c48a673b822d51b1deb2cafc2cecab31
-Author: sébastien jacq <57099003+sjthales@users.noreply.github.com>
-Date:   Tue Nov 8 23:15:02 2022 +0100
+commit c4c412a9f8c3b9f21ca7f7b6c58b612ec2afe724
+Author: Misbahud Din <72780676+Misbahud-Din@users.noreply.github.com>
+Date:   Wed Aug 6 11:50:17 2026 +0200
 
-    Optimize FPGA memories (#989)
+    Fixed classifications of c.jr and c.jalr instruction in instr_scan (#3444)
 
 """
 
