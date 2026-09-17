@@ -32,34 +32,10 @@ module tb import tb_pkg::*; import ariane_pkg::*; import wt_cache_pkg::*; #()();
   timeprecision 1ps;
 
   // number of 32bit words
-  parameter MemBytes                   = 2**ICACHE_INDEX_WIDTH * 4 * 32;
+  parameter MemBytes                   = 2**CVA6Cfg.ICACHE_INDEX_WIDTH * 4 * 32;
   parameter MemWords                   = MemBytes>>2;
   parameter logic [63:0] CachedAddrBeg = MemBytes/4;
   parameter logic [63:0] CachedAddrEnd = MemBytes;
-
-  localparam ariane_cfg_t Cfg = '{
-    RASDepth:              2,
-    BTBEntries:            32,
-    BHTEntries:            128,
-    // idempotent region
-    NrNonIdempotentRules:  0,
-    NonIdempotentAddrBase: {64'b0},
-    NonIdempotentLength:   {64'b0},
-    // executable region
-    NrExecuteRegionRules:  0,
-    ExecuteRegionAddrBase: {64'h0},
-    ExecuteRegionLength:   {64'h0},
-    // cached region
-    NrCachedRegionRules:   1,
-    CachedRegionAddrBase: {CachedAddrBeg},
-    CachedRegionLength:   {CachedAddrEnd-CachedAddrBeg+64'b1},
-    // cache config
-    AxiCompliant:          1'b0,
-    SwapEndianess:         1'b0,
-    // debug
-    DmBaseAddress:         64'h0,
-    NrPMPEntries:          0
-  };
 
   // rates are in percent
   parameter TlbRandHitRate   = 50;
@@ -83,10 +59,10 @@ module tb import tb_pkg::*; import ariane_pkg::*; import wt_cache_pkg::*; #()();
   logic           flush_i;
   logic           en_i;
   logic           miss_o;
-  icache_areq_i_t areq_i;
-  icache_areq_o_t areq_o;
-  icache_dreq_i_t dreq_i;
-  icache_dreq_o_t dreq_o;
+  icache_areq_t areq_i;
+  icache_arsp_t areq_o;
+  icache_dreq_t dreq_i;
+  icache_drsp_t dreq_o;
   logic           mem_rtrn_vld_i;
   icache_rtrn_t   mem_rtrn_i;
   logic           mem_data_req_o;
@@ -262,7 +238,7 @@ module tb import tb_pkg::*; import ariane_pkg::*; import wt_cache_pkg::*; #()();
 ///////////////////////////////////////////////////////////////////////////////
 
   cva6_icache  #(
-    .ArianeCfg(Cfg)
+    .CVA6Cfg(ariane_pkg::CVA6DefaultCfg)
     ) dut (
     .clk_i          ( clk_i          ),
     .rst_ni         ( rst_ni         ),

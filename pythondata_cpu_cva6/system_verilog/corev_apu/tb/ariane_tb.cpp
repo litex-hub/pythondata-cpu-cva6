@@ -15,9 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#include "Variane_testharness.h"
 #include "verilator.h"
 #include "verilated.h"
+#include "Variane_testharness.h"
+#if (VERILATOR_VERSION_INTEGER >= 5000000)
+  // Verilator v5 adds $root wrapper that provides rootp pointer.
+  #include "Variane_testharness___024root.h"
+#endif
 #if VM_TRACE_FST
 #include "verilated_fst_c.h"
 #else
@@ -51,14 +55,17 @@ static vluint64_t main_time = 0;
 
 static const char *verilog_plusargs[] = {"jtag_rbb_enable", "time_out", "debug_disable"};
 
-#ifndef DROMAJO
 extern dtm_t* dtm;
 extern remote_bitbang_t * jtag;
 
 void handle_sigterm(int sig) {
   dtm->stop();
 }
-#endif
+
+
+extern "C" void read_elf(const char* filename);
+extern "C" char get_section (long long* address, long long* len);
+extern "C" void read_section_void(long long address, void * buffer, uint64_t size = 0);
 
 // Called by $time in Verilog converts to double, to match what SystemC does
 double sc_time_stamp () {
@@ -103,13 +110,7 @@ EMULATOR DEBUG OPTIONS (only supported in debug build -- try `make debug`)\n",
 "  - run a bare metal test to generate an FST waveform:\n"
 "    %s -f rv64ui-p-add.fst $RISCV/riscv64-unknown-elf/share/riscv-tests/isa/rv64ui-p-add\n"
 #endif
-"  - run an ELF (you wrote, called 'hello') using the proxy kernel:\n"
-"    %s pk hello\n",
-         program_name, program_name, program_name
-#if VM_TRACE
-         , program_name, program_name
-#endif
-         );
+  , program_name, program_name);
 }
 
 // In case we use the DTM we do not want to use the JTAG
@@ -119,7 +120,7 @@ class preload_aware_dtm_t : public dtm_t {
     preload_aware_dtm_t(int argc, char **argv) : dtm_t(argc, argv) {}
     bool is_address_preloaded(addr_t taddr, size_t len) override { return true; }
     // We do not want to reset the hart here as the reset function in `dtm_t` seems to disregard
-    // the privilege level and in general does not perform propper reset (despite the name).
+    // the privilege level and in general does not perform proper reset (despite the name).
     // As all our binaries in preloading will always start at the base of DRAM this should not
     // be such a big problem.
     void reset() {}
@@ -177,9 +178,6 @@ int main(int argc, char **argv) {
       case 'r': rbb_port = atoi(optarg);    break;
       case 'V': verbose = true;             break;
       case 'p': perf = true;                break;
-#ifdef DROMAJO
-            case 'D': break;
-#endif
 #if VM_TRACE
       case 'v': {
         vcdfile = strcmp(optarg, "-") == 0 ? stdout : fopen(optarg, "w");
@@ -209,12 +207,6 @@ int main(int argc, char **argv) {
           c = 'm';
           optarg = optarg+12;
         }
-#ifdef DROMAJO
-        else if (arg.substr(0, 12) == "+checkpoint=") {
-          c = 'D';
-          optarg = optarg+12;
-        }
-#endif
 #if VM_TRACE
         else if (arg.substr(0, 12) == "+dump-start=") {
           c = 'x';
@@ -273,15 +265,11 @@ int main(int argc, char **argv) {
   }
 
 done_processing:
-// allow proceeding without a binary if DROMAJO set,
-// binary will be loaded through checkpoint
-#ifndef DROMAJO
   if (optind == argc) {
     std::cerr << "No binary specified for emulator\n";
     usage(argv[0]);
     return 1;
   }
-#endif
   int htif_argc = 1 + argc - optind;
   htif_argv = (char **) malloc((htif_argc) * sizeof (char *));
   htif_argv[0] = argv[0];
@@ -290,19 +278,13 @@ done_processing:
   const char *vcd_file = NULL;
   Verilated::commandArgs(argc, argv);
 
-#ifndef DROMAJO
   jtag = new remote_bitbang_t(rbb_port);
   dtm = new preload_aware_dtm_t(htif_argc, htif_argv);
   signal(SIGTERM, handle_sigterm);
-#endif
 
   std::unique_ptr<Variane_testharness> top(new Variane_testharness);
 
-  // Use an hitf hexwriter to read the binary data.
-  htif_hexwriter_t htif(0x0, 1, -1);
-  memif_t memif(&htif);
-  reg_t entry;
-  load_elf(htif_argv[1], &memif, &entry);
+  read_elf(htif_argv[1]);
 
 #if VM_TRACE
   Verilated::traceEverOn(true); // Verilator must compute traced signals
@@ -348,16 +330,32 @@ done_processing:
   top->rst_ni = 1;
 
   // Preload memory.
-  size_t mem_size = 0xFFFFFF;
-  memif.read(0x80000000, mem_size, (void *)top->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__gen_mem__DOT__i_tc_sram_wrapper__DOT__i_tc_sram__DOT__sram);
-  // memif.read(0x84000000, mem_size, (void *)top->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__gen_mem__DOT__gen_mem_user__DOT__i_tc_sram_wrapper_user__DOT__i_tc_sram__DOT__sram);
-
-#ifndef DROMAJO
-  while (!dtm->done() && !jtag->done()) {
+#if (VERILATOR_VERSION_INTEGER >= 5000000)
+  // Verilator v5: Use rootp pointer and .data() accessor.
+#define MEM top->rootp->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__i_tc_sram_wrapper__DOT__i_tc_sram__DOT__sram.m_storage
+#define MEM_USER top->rootp->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__gen_mem_user__DOT__i_tc_sram_wrapper_user__DOT__i_tc_sram__DOT__sram.m_storage
 #else
-  // the simulation gets killed by dromajo
-  while (true) {
+  // Verilator v4
+#define MEM top->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__i_tc_sram_wrapper__DOT__i_tc_sram__DOT__sram
+#define MEM_USER top->ariane_testharness__DOT__i_sram__DOT__gen_cut__BRA__0__KET____DOT__gen_mem_user__DOT__i_tc_sram_wrapper_user__DOT__i_tc_sram__DOT__sram
 #endif
+  long long addr;
+  long long len;
+
+  size_t mem_size = 0xFFFFFF;
+  while(get_section(&addr, &len))
+  {
+    if (addr == 0x80000000)
+        read_section_void(addr, (void *) MEM , mem_size);
+    if (addr == 0x84000000)
+        try {
+          read_section_void(addr, (void *) MEM_USER , mem_size);
+        } catch (...){
+          std::cerr << "No user memory instantiated ...\n";
+        }
+  }
+
+  while (!dtm->done() && !jtag->done() && !(top->exit_o & 0x1)) {
     top->clk_i = 0;
     top->eval();
 #if VM_TRACE
@@ -385,20 +383,22 @@ done_processing:
     fclose(vcdfile);
 #endif
 
-#ifndef DROMAJO
   if (dtm->exit_code()) {
-    fprintf(stderr, "%s *** FAILED *** (code = %d) after %ld cycles\n", htif_argv[1], dtm->exit_code(), main_time);
+    fprintf(stderr, "%s *** FAILED *** (tohost = %d) after %ld cycles\n", htif_argv[1], dtm->exit_code(), main_time);
     ret = dtm->exit_code();
   } else if (jtag->exit_code()) {
-    fprintf(stderr, "%s *** FAILED *** (code = %d, seed %d) after %ld cycles\n", htif_argv[1], jtag->exit_code(), random_seed, main_time);
+    fprintf(stderr, "%s *** FAILED *** (tohost = %d, seed %d) after %ld cycles\n", htif_argv[1], jtag->exit_code(), random_seed, main_time);
     ret = jtag->exit_code();
+  } else if (top->exit_o & 0xFFFFFFFE) {
+    int exitcode = ((unsigned int) top->exit_o) >> 1;
+    fprintf(stderr, "%s *** FAILED *** (tohost = %d) after %ld cycles\n", htif_argv[1], exitcode, main_time);
+    ret = exitcode;
   } else {
-    fprintf(stderr, "%s completed after %ld cycles\n", htif_argv[1], main_time);
+    fprintf(stderr, "%s *** SUCCESS *** (tohost = 0) after %ld cycles\n", htif_argv[1], main_time);
   }
 
   if (dtm) delete dtm;
   if (jtag) delete jtag;
-#endif
 
   std::clock_t c_end = std::clock();
   auto t_end = std::chrono::high_resolution_clock::now();

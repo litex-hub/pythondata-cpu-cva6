@@ -1,0 +1,7 @@
+[appendix]
+== Formal Memory Model Specifications, Version 0.1
+[[mm-formal]]
+
+ifdef::archi-CV32A60X,archi-CV32A65X[]
+{ohg-config}: No RVWMO memory model.
+endif::[]

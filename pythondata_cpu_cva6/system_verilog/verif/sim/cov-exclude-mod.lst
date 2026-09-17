@@ -1,0 +1,16 @@
+// Copyright 2021 Thales DIS design services SAS
+//
+// Licensed under the Solderpad Hardware Licence, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.0
+// You may obtain a copy of the License at https://solderpad.org/licenses/
+//
+// Original Author: Zineb EL KACIMI (zineb.el-kacimi@external.thalesgroup.com)
+
+
+-tree uvmt_cva6_tb.cva6_dut_wrap.cva6_tb_wrapper_i.i_cva6.instr_tracer_i
+-tree uvmt_cva6_tb.cva6_dut_wrap.cva6_tb_wrapper_i.i_cva6.tracer_if
+-tree uvmt_cva6_tb.cva6_dut_wrap.cva6_tb_wrapper_i.i_cva6.genblk6.i_cva6_rvfi_combi
+-tree uvmt_cva6_tb.cva6_dut_wrap.cva6_tb_wrapper_i.i_cva6.i_cva6_rvfi_probes
+-tree uvmt_cva6_tb.cva6_dut_wrap.cva6_tb_wrapper_i.i_cva6.i_frontend.i_instr_queue.i_unread_*
+-tree uvmt_cva6_tb.cva6_dut_wrap.cva6_tb_wrapper_i.i_cva6.gen_cache_hpd.i_cache_subsystem

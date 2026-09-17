@@ -14,17 +14,23 @@
 //              Instantiates an AXI-Bus and memories
 
 `include "axi/assign.svh"
+`include "rvfi_types.svh"
+`include "iti_types.svh"
+
+`ifdef VERILATOR
+`include "custom_uvm_macros.svh"
+`else
+`include "uvm_macros.svh"
+`endif
 
 module ariane_testharness #(
-  parameter int unsigned AXI_USER_WIDTH    = ariane_pkg::AXI_USER_WIDTH,
-  parameter int unsigned AXI_USER_EN       = ariane_pkg::AXI_USER_EN,
+  parameter config_pkg::cva6_cfg_t CVA6Cfg = build_config_pkg::build_config(cva6_config_pkg::cva6_cfg),
+  //
+  parameter int unsigned AXI_USER_WIDTH    = CVA6Cfg.AxiUserWidth,
+  parameter int unsigned AXI_USER_EN       = CVA6Cfg.AXI_USER_EN,
   parameter int unsigned AXI_ADDRESS_WIDTH = 64,
   parameter int unsigned AXI_DATA_WIDTH    = 64,
-`ifdef DROMAJO
-  parameter bit          InclSimDTM        = 1'b0,
-`else
   parameter bit          InclSimDTM        = 1'b1,
-`endif
   parameter int unsigned NUM_WORDS         = 2**25,         // memory size
   parameter bit          StallRandomOutput = 1'b0,
   parameter bit          StallRandomInput  = 1'b0
@@ -37,6 +43,21 @@ module ariane_testharness #(
 
   localparam [7:0] hart_id = '0;
 
+  // RVFI
+  localparam type rvfi_instr_t = `RVFI_INSTR_T(CVA6Cfg);
+  localparam type rvfi_csr_elmt_t = `RVFI_CSR_ELMT_T(CVA6Cfg);
+  localparam type rvfi_csr_t = `RVFI_CSR_T(CVA6Cfg, rvfi_csr_elmt_t);
+  localparam type rvfi_to_iti_t = `RVFI_TO_ITI_T(CVA6Cfg);
+  localparam type iti_to_encoder_t = `ITI_TO_ENCODER_T(CVA6Cfg);
+
+  // RVFI PROBES
+  localparam type rvfi_probes_instr_t = `RVFI_PROBES_INSTR_T(CVA6Cfg);
+  localparam type rvfi_probes_csr_t = `RVFI_PROBES_CSR_T(CVA6Cfg);
+  localparam type rvfi_probes_t = struct packed {
+    rvfi_probes_csr_t csr;
+    rvfi_probes_instr_t instr;
+  };
+
   // disable test-enable
   logic        test_en;
   logic        ndmreset;
@@ -46,6 +67,9 @@ module ariane_testharness #(
   int          jtag_enable;
   logic        init_done;
   logic [31:0] jtag_exit, dmi_exit;
+  logic [31:0] rvfi_exit;
+  logic [31:0] tracer_exit;
+  logic [31:0] tandem_exit;
 
   logic        jtag_TCK;
   logic        jtag_TMS;
@@ -79,17 +103,17 @@ module ariane_testharness #(
   assign test_en = 1'b0;
 
   AXI_BUS #(
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH   ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH      ),
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidth ),
-    .AXI_USER_WIDTH ( AXI_USER_WIDTH      )
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH       ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH          ),
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidth ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH          )
   ) slave[ariane_soc::NrSlaves-1:0]();
 
   AXI_BUS #(
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH        ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH           ),
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidthSlave ),
-    .AXI_USER_WIDTH ( AXI_USER_WIDTH           )
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               )
   ) master[ariane_soc::NB_PERIPHERALS-1:0]();
 
   rstgen i_rstgen_main (
@@ -109,14 +133,18 @@ module ariane_testharness #(
   initial begin
     if (!$value$plusargs("jtag_rbb_enable=%b", jtag_enable)) jtag_enable = 'h0;
     if ($test$plusargs("debug_disable")) debug_enable = 'h0; else debug_enable = 'h1;
-    if (riscv::XLEN != 32 & riscv::XLEN != 64) $error("XLEN different from 32 and 64");
+    if (!CVA6Cfg.IS_XLEN32 & !CVA6Cfg.IS_XLEN64) $error("CVA6Cfg.XLEN different from 32 and 64");
   end
 
   // debug if MUX
   assign debug_req_valid     = (jtag_enable[0]) ? jtag_req_valid     : dmi_req_valid;
   assign debug_resp_ready    = (jtag_enable[0]) ? jtag_resp_ready    : dmi_resp_ready;
   assign debug_req           = (jtag_enable[0]) ? jtag_dmi_req       : dmi_req;
-  assign exit_o              = (jtag_enable[0]) ? jtag_exit          : dmi_exit;
+  if (ariane_pkg::RVFI) begin
+    assign exit_o              = (jtag_enable[0]) ? jtag_exit          : rvfi_exit;
+  end else begin
+    assign exit_o              = (jtag_enable[0]) ? jtag_exit          : dmi_exit;
+  end
   assign jtag_resp_valid     = (jtag_enable[0]) ? debug_resp_valid   : 1'b0;
   assign dmi_resp_valid      = (jtag_enable[0]) ? 1'b0               : debug_resp_valid;
 
@@ -203,8 +231,8 @@ module ariane_testharness #(
     end
   end
 
-  ariane_axi_soc::req_t    dm_axi_m_req;
-  ariane_axi_soc::resp_t   dm_axi_m_resp;
+  ariane_axi::req_t    dm_axi_m_req;
+  ariane_axi::resp_t   dm_axi_m_resp;
 
   logic                dm_slave_req;
   logic                dm_slave_we;
@@ -261,10 +289,10 @@ module ariane_testharness #(
 
 
   axi2mem #(
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidthSlave ),
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH        ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH           ),
-    .AXI_USER_WIDTH ( AXI_USER_WIDTH           )
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               )
   ) i_dm_axi2mem (
     .clk_i      ( clk_i                     ),
     .rst_ni     ( rst_ni                    ),
@@ -283,17 +311,15 @@ module ariane_testharness #(
   `AXI_ASSIGN_TO_RESP(dm_axi_m_resp, slave[1])
 
   axi_adapter #(
+    .CVA6Cfg               ( CVA6Cfg                   ),
     .DATA_WIDTH            ( AXI_DATA_WIDTH            ),
-    .AXI_ADDR_WIDTH        ( ariane_axi_soc::AddrWidth ),
-    .AXI_DATA_WIDTH        ( ariane_axi_soc::DataWidth ),
-    .AXI_ID_WIDTH          ( ariane_soc::IdWidth       ),
-    .axi_req_t             ( ariane_axi_soc::req_t     ),
-    .axi_rsp_t             ( ariane_axi_soc::resp_t    )
+    .axi_req_t             ( ariane_axi::req_t         ),
+    .axi_rsp_t             ( ariane_axi::resp_t        )
   ) i_dm_axi_master (
     .clk_i                 ( clk_i                     ),
     .rst_ni                ( rst_ni                    ),
     .req_i                 ( dm_master_req             ),
-    .type_i                ( ariane_axi::SINGLE_REQ    ),
+    .type_i                ( ariane_pkg::SINGLE_REQ    ),
     .amo_i                 ( ariane_pkg::AMO_NONE      ),
     .gnt_o                 ( dm_master_gnt             ),
     .addr_i                ( dm_master_add             ),
@@ -320,10 +346,10 @@ module ariane_testharness #(
   logic [AXI_DATA_WIDTH-1:0]    rom_rdata;
 
   axi2mem #(
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidthSlave ),
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH        ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH           ),
-    .AXI_USER_WIDTH ( AXI_USER_WIDTH           )
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               )
   ) i_axi2rom (
     .clk_i  ( clk_i                   ),
     .rst_ni ( ndmreset_n              ),
@@ -338,21 +364,12 @@ module ariane_testharness #(
     .data_i ( rom_rdata               )
   );
 
-`ifdef DROMAJO
-  dromajo_bootrom i_bootrom (
-    .clk_i      ( clk_i     ),
-    .req_i      ( rom_req   ),
-    .addr_i     ( rom_addr  ),
-    .rdata_o    ( rom_rdata )
-  );
-`else
   bootrom i_bootrom (
     .clk_i      ( clk_i     ),
     .req_i      ( rom_req   ),
     .addr_i     ( rom_addr  ),
     .rdata_o    ( rom_rdata )
   );
-`endif
 
   // ------------------------------
   // GPIO
@@ -365,9 +382,9 @@ module ariane_testharness #(
   `AXI_ASSIGN_TO_REQ(gpio_req, master[ariane_soc::GPIO])
   `AXI_ASSIGN_FROM_RESP(master[ariane_soc::GPIO], gpio_resp)
   axi_err_slv #(
-    .AxiIdWidth ( ariane_soc::IdWidthSlave   ),
-    .req_t      ( ariane_axi_soc::req_slv_t  ),
-    .resp_t     ( ariane_axi_soc::resp_slv_t )
+    .AxiIdWidth ( ariane_axi_soc::IdWidthSlave ),
+    .req_t      ( ariane_axi_soc::req_slv_t    ),
+    .resp_t     ( ariane_axi_soc::resp_slv_t   )
   ) i_gpio_err_slv (
     .clk_i      ( clk_i      ),
     .rst_ni     ( ndmreset_n ),
@@ -381,10 +398,10 @@ module ariane_testharness #(
   // Memory + Exclusive Access
   // ------------------------------
   AXI_BUS #(
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH        ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH           ),
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidthSlave ),
-    .AXI_USER_WIDTH ( AXI_USER_WIDTH           )
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               )
   ) dram();
 
   logic                         req;
@@ -397,10 +414,10 @@ module ariane_testharness #(
   logic [AXI_USER_WIDTH-1:0]    ruser;
 
   axi_riscv_atomics_wrap #(
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH        ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH           ),
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidthSlave ),
-    .AXI_USER_WIDTH ( AXI_USER_WIDTH           ),
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               ),
     .AXI_MAX_WRITE_TXNS ( 1  ),
     .RISCV_WORD_WIDTH   ( 64 )
   ) i_axi_riscv_atomics (
@@ -411,21 +428,21 @@ module ariane_testharness #(
   );
 
   AXI_BUS #(
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH        ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH           ),
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidthSlave ),
-    .AXI_USER_WIDTH ( AXI_USER_WIDTH           )
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               )
   ) dram_delayed();
 
   axi_delayer_intf #(
-    .AXI_ID_WIDTH        ( ariane_soc::IdWidthSlave ),
-    .AXI_ADDR_WIDTH      ( AXI_ADDRESS_WIDTH        ),
-    .AXI_DATA_WIDTH      ( AXI_DATA_WIDTH           ),
-    .AXI_USER_WIDTH      ( AXI_USER_WIDTH           ),
-    .STALL_RANDOM_INPUT  ( StallRandomInput         ),
-    .STALL_RANDOM_OUTPUT ( StallRandomOutput        ),
-    .FIXED_DELAY_INPUT   ( 0                        ),
-    .FIXED_DELAY_OUTPUT  ( 0                        )
+    .AXI_ID_WIDTH        ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_ADDR_WIDTH      ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH      ( AXI_DATA_WIDTH               ),
+    .AXI_USER_WIDTH      ( AXI_USER_WIDTH               ),
+    .STALL_RANDOM_INPUT  ( StallRandomInput             ),
+    .STALL_RANDOM_OUTPUT ( StallRandomOutput            ),
+    .FIXED_DELAY_INPUT   ( 0                            ),
+    .FIXED_DELAY_OUTPUT  ( 0                            )
   ) i_axi_delayer (
     .clk_i  ( clk_i        ),
     .rst_ni ( ndmreset_n   ),
@@ -434,10 +451,10 @@ module ariane_testharness #(
   );
 
   axi2mem #(
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidthSlave ),
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH        ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH           ),
-    .AXI_USER_WIDTH ( AXI_USER_WIDTH           )
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_USER_WIDTH ( AXI_USER_WIDTH               )
   ) i_axi2mem (
     .clk_i  ( clk_i        ),
     .rst_ni ( ndmreset_n   ),
@@ -460,9 +477,6 @@ module ariane_testharness #(
     .SIM_INIT   ( "none"         ),
 `else
     .SIM_INIT   ( "zeros"        ),
-`endif
-`ifdef DROMAJO
-    .DROMAJO_RAM (1),
 `endif
     .NUM_WORDS  ( NUM_WORDS      )
   ) i_sram (
@@ -498,18 +512,18 @@ module ariane_testharness #(
   };
 
   localparam axi_pkg::xbar_cfg_t AXI_XBAR_CFG = '{
-    NoSlvPorts: ariane_soc::NrSlaves,
-    NoMstPorts: ariane_soc::NB_PERIPHERALS,
-    MaxMstTrans: 1, // Probably requires update
-    MaxSlvTrans: 1, // Probably requires update
+    NoSlvPorts: unsigned'(ariane_soc::NrSlaves),
+    NoMstPorts: unsigned'(ariane_soc::NB_PERIPHERALS),
+    MaxMstTrans: unsigned'(1), // Probably requires update
+    MaxSlvTrans: unsigned'(1), // Probably requires update
     FallThrough: 1'b0,
     LatencyMode: axi_pkg::NO_LATENCY,
-    AxiIdWidthSlvPorts: ariane_soc::IdWidth,
-    AxiIdUsedSlvPorts: ariane_soc::IdWidth,
+    AxiIdWidthSlvPorts: unsigned'(ariane_axi_soc::IdWidth),
+    AxiIdUsedSlvPorts: unsigned'(ariane_axi_soc::IdWidth),
     UniqueIds: 1'b0,
-    AxiAddrWidth: AXI_ADDRESS_WIDTH,
-    AxiDataWidth: AXI_DATA_WIDTH,
-    NoAddrRules: ariane_soc::NB_PERIPHERALS
+    AxiAddrWidth: unsigned'(AXI_ADDRESS_WIDTH),
+    AxiDataWidth: unsigned'(AXI_DATA_WIDTH),
+    NoAddrRules: unsigned'(ariane_soc::NB_PERIPHERALS)
   };
 
   axi_xbar_intf #(
@@ -537,12 +551,13 @@ module ariane_testharness #(
   ariane_axi_soc::resp_slv_t axi_clint_resp;
 
   clint #(
-    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH          ),
-    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH             ),
-    .AXI_ID_WIDTH   ( ariane_soc::IdWidthSlave   ),
-    .NR_CORES       ( 1                          ),
-    .axi_req_t      ( ariane_axi_soc::req_slv_t  ),
-    .axi_resp_t     ( ariane_axi_soc::resp_slv_t )
+    .CVA6Cfg        ( CVA6Cfg                      ),
+    .AXI_ADDR_WIDTH ( AXI_ADDRESS_WIDTH            ),
+    .AXI_DATA_WIDTH ( AXI_DATA_WIDTH               ),
+    .AXI_ID_WIDTH   ( ariane_axi_soc::IdWidthSlave ),
+    .NR_CORES       ( 1                            ),
+    .axi_req_t      ( ariane_axi_soc::req_slv_t    ),
+    .axi_resp_t     ( ariane_axi_soc::resp_slv_t   )
   ) i_clint (
     .clk_i       ( clk_i          ),
     .rst_ni      ( ndmreset_n     ),
@@ -564,16 +579,12 @@ module ariane_testharness #(
   logic [1:0] irqs;
 
   ariane_peripherals #(
-    .AxiAddrWidth ( AXI_ADDRESS_WIDTH        ),
-    .AxiDataWidth ( AXI_DATA_WIDTH           ),
-    .AxiIdWidth   ( ariane_soc::IdWidthSlave ),
+    .AxiAddrWidth ( AXI_ADDRESS_WIDTH            ),
+    .AxiDataWidth ( AXI_DATA_WIDTH               ),
+    .AxiIdWidth   ( ariane_axi_soc::IdWidthSlave ),
+    .AxiUserWidth ( AXI_USER_WIDTH               ),
 `ifndef VERILATOR
-  // disable UART when using Spike, as we need to rely on the mockuart
-  `ifdef SPIKE_TANDEM
-    .InclUART     ( 1'b0                     ),
-  `else
     .InclUART     ( 1'b1                     ),
-  `endif
 `else
     .InclUART     ( 1'b0                     ),
 `endif
@@ -612,12 +623,21 @@ module ariane_testharness #(
   // ---------------
   // Core
   // ---------------
-  ariane_axi_soc::req_t    axi_ariane_req;
-  ariane_axi_soc::resp_t   axi_ariane_resp;
-  ariane_rvfi_pkg::rvfi_port_t rvfi;
+  ariane_axi::req_t    axi_ariane_req;
+  ariane_axi::resp_t   axi_ariane_resp;
+  rvfi_probes_t rvfi_probes;
+  rvfi_csr_t rvfi_csr;
+  rvfi_instr_t [CVA6Cfg.NrCommitPorts-1:0]  rvfi_instr;
+  rvfi_to_iti_t rvfi_to_iti;
+  iti_to_encoder_t iti_to_encoder;
 
   ariane #(
-    .ArianeCfg  ( ariane_soc::ArianeSocCfg )
+    .CVA6Cfg              ( CVA6Cfg             ),
+    .rvfi_probes_instr_t  ( rvfi_probes_instr_t ),
+    .rvfi_probes_csr_t    ( rvfi_probes_csr_t   ),
+    .rvfi_probes_t        ( rvfi_probes_t       ),
+    .noc_req_t            ( ariane_axi::req_t   ),
+    .noc_resp_t           ( ariane_axi::resp_t  )
   ) i_ariane (
     .clk_i                ( clk_i               ),
     .rst_ni               ( ndmreset_n          ),
@@ -626,17 +646,15 @@ module ariane_testharness #(
     .irq_i                ( irqs                ),
     .ipi_i                ( ipi                 ),
     .time_irq_i           ( timer_irq           ),
-`ifdef RVFI_TRACE
-    .rvfi_o               ( rvfi                ),
-`endif
+    .rvfi_probes_o        ( rvfi_probes         ),
 // Disable Debug when simulating with Spike
 `ifdef SPIKE_TANDEM
     .debug_req_i          ( 1'b0                ),
 `else
     .debug_req_i          ( debug_req_core      ),
 `endif
-    .axi_req_o            ( axi_ariane_req      ),
-    .axi_resp_i           ( axi_ariane_resp     )
+    .noc_req_o            ( axi_ariane_req      ),
+    .noc_resp_i           ( axi_ariane_resp     )
   );
 
   `AXI_ASSIGN_FROM_REQ(slave[0], axi_ariane_req)
@@ -659,23 +677,211 @@ module ariane_testharness #(
     end
   end
 
+    cva6_iti #(
+        .CVA6Cfg   (CVA6Cfg),
+        .CAUSE_LEN  (iti_pkg::CAUSE_LEN),
+        .ITYPE_LEN (iti_pkg::ITYPE_LEN),
+        .IRETIRE_LEN (iti_pkg::IRETIRE_LEN),
+        .block_mode(0),
+        .rvfi_to_iti_t(rvfi_to_iti_t),
+        .iti_to_encoder_t(iti_to_encoder_t)
+    ) i_cva6_iti (
+        .clk_i  (clk_i),
+        .rst_ni (ndmreset_n),
+        // inputs from rvfi
+        .valid_i(rvfi_to_iti.valid),
+        .rvfi_to_iti_i(rvfi_to_iti),
+        .valid_o(),
+        .iti_to_encoder_o(iti_to_encoder)
+    );
+
+    logic                    packet_valid;
+    te_pkg::it_packet_type_e [0:0] packet_type;
+    logic [te_pkg::P_LEN-1:0] packet_length;
+    logic [te_pkg::PAYLOAD_LEN-1:0] packet_payload;
+
+    rv_tracer #(
+        .N(1),
+        .ONLY_BRANCHES(1)
+    ) i_encoder(
+        .clk_i               (clk_i),
+        .rst_ni              (rst_ni),
+        .valid_i             (iti_to_encoder.valid),
+        .itype_i             (iti_to_encoder.itype),
+        .cause_i             (iti_to_encoder.cause),
+        .tval_i              (iti_to_encoder.tval),
+        .priv_i              (iti_to_encoder.priv),
+        .iaddr_i             (iti_to_encoder.iaddr),
+        .iretire_i           (iti_to_encoder.iretire),
+        .ilastsize_i         (iti_to_encoder.ilastsize),
+        .time_i              (iti_to_encoder.cycles),
+        .tvec_i              ('0),
+        .epc_i               ('0),
+        .encapsulator_ready_i('1),
+        .paddr_i             ('0),
+        .pwrite_i            ('0),
+        .psel_i              ('0),
+        .penable_i           ('0),
+        .pwdata_i            ('0),
+        .packet_valid_o      (packet_valid),
+        .packet_type_o       (packet_type),
+        .packet_length_o     (packet_length),
+        .packet_payload_o    (packet_payload),
+        .stall_o             (),
+        .pready_o            (),
+        .prdata_o            ()
+    );
+
+    logic                           encap_valid;
+    encap_pkg::encap_fifo_entry_s   encap_fifo_entry_i;
+    encap_pkg::encap_fifo_entry_s   encap_fifo_entry_o;
+    logic                           encap_fifo_full;
+    logic                           encap_fifo_empty;
+    logic                           encap_fifo_pop;
+
+    encapsulator i_encapsulator (
+        .clk_i              (clk_i),
+        .valid_i            (packet_valid),
+        .packet_length_i    (packet_length),
+        .flow_i             ('0),
+        .timestamp_present_i('1),
+        //.srcid_i(),
+        .timestamp_i        (rvfi_to_iti.cycles),
+        //.type_i(),
+        .trace_payload_i    (packet_payload),
+        .valid_o            (encap_valid),
+        .encap_fifo_entry_o (encap_fifo_entry_i)
+    );
+
+    fifo_v3 # (
+        .DEPTH(16),
+        .dtype(encap_pkg::encap_fifo_entry_s)
+    ) i_fifo_encap (
+        .clk_i     (clk_i),
+        .rst_ni    (rst_ni),
+        .flush_i   ('0),
+        .testmode_i('0),
+        .full_o    (encap_fifo_full),
+        .empty_o   (encap_fifo_empty),
+        .usage_o   (),
+        .data_i    (encap_fifo_entry_i),
+        .push_i    (encap_valid),
+        .data_o    (encap_fifo_entry_o),
+        .pop_i     (encap_fifo_pop)
+    );
+    localparam DATA_LEN = 8;
+
+    logic                           slicer_valid;
+    logic [DATA_LEN-1:0]            slice;
+    logic [$clog2(DATA_LEN)-4:0]    valid_bytes;
+
+    slicer_DPTI #(
+        .SLICE_LEN(DATA_LEN),
+        .NO_TIME ('0)
+    ) i_slicer (
+        .clk_i             (clk_i),
+        .rst_ni            (rst_ni),
+        .valid_i           (!encap_fifo_empty),
+        .encap_fifo_entry_i(encap_fifo_entry_o),
+        .fifo_full_i       ('0), // usrFull DPTI in ariane_xilinx
+        .valid_o           (slicer_valid),
+        .slice_o           (slice),
+        .done_o            (encap_fifo_pop)
+    );
+
+  cva6_rvfi #(
+      .CVA6Cfg   (CVA6Cfg),
+      .rvfi_instr_t(rvfi_instr_t),
+      .rvfi_csr_t(rvfi_csr_t),
+      .rvfi_probes_instr_t(rvfi_probes_instr_t),
+      .rvfi_probes_csr_t(rvfi_probes_csr_t),
+      .rvfi_probes_t(rvfi_probes_t),
+      .rvfi_to_iti_t(rvfi_to_iti_t)
+  ) i_cva6_rvfi (
+      .clk_i        (clk_i),
+      .rst_ni       (rst_ni),
+      .rvfi_probes_i(rvfi_probes),
+      .rvfi_instr_o (rvfi_instr),
+      .rvfi_to_iti_o   (rvfi_to_iti),
+      .rvfi_csr_o   (rvfi_csr)
+  );
+
   rvfi_tracer  #(
+    .CVA6Cfg(CVA6Cfg),
+    .rvfi_instr_t(rvfi_instr_t),
+    .rvfi_csr_t(rvfi_csr_t),
+    //
     .HART_ID(hart_id),
     .DEBUG_START(0),
     .DEBUG_STOP(0)
-  ) rvfi_tracer_i (
+  ) i_rvfi_tracer (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
-    .rvfi_i(rvfi)
+    .rvfi_i(rvfi_instr),
+    .rvfi_csr_i(rvfi_csr),
+    .end_of_test_o(tracer_exit)
   );
+
+`ifdef SPIKE_TANDEM
+    spike #(
+        .CVA6Cfg ( CVA6Cfg ),
+        .rvfi_instr_t(rvfi_instr_t),
+        .rvfi_csr_t(rvfi_csr_t)
+    ) i_spike (
+        .clk_i,
+        .rst_ni,
+        .clint_tick_i   ( rtc_i    ),
+        .rvfi_i         ( rvfi_instr ),
+        .rvfi_csr_i     ( rvfi_csr ),
+        .end_of_test_o  ( tandem_exit )
+    );
+    initial begin
+        $display("Running binary in tandem mode");
+    end
+
+    bit tandem_timeout_enable;
+    bit [31:0] tandem_timeout;
+    localparam TANDEM_TIMEOUT_THRESHOLD = 60;
+
+    // Tandem timeout logic
+    always_ff @(posedge clk_i) begin
+        if(tandem_timeout > TANDEM_TIMEOUT_THRESHOLD)
+            tandem_timeout_enable <= 0;
+        else if (tracer_exit)
+            tandem_timeout_enable <= 1;
+
+        if (tandem_timeout_enable)
+            tandem_timeout <= tandem_timeout + 1;
+    end
+
+    always_ff @(posedge clk_i) begin
+        if (tandem_exit || (tandem_timeout > TANDEM_TIMEOUT_THRESHOLD)) begin
+            rvfi_exit <= tracer_exit;
+        end
+
+    end
+`else
+    assign rvfi_exit = tracer_exit;
+`endif
+
+`ifdef VERILATOR
+    initial begin
+        string verbosity;
+        if ($value$plusargs("UVM_VERBOSITY=%s",verbosity)) begin
+          uvm_set_verbosity_level(verbosity);
+          `uvm_info("ariane_testharness", $sformatf("Set UVM_VERBOSITY to %s", verbosity), UVM_NONE)
+        end
+    end
+`endif
+
 
 `ifdef AXI_SVA
   // AXI 4 Assertion IP integration - You will need to get your own copy of this IP if you want
   // to use it
   Axi4PC #(
     .DATA_WIDTH(ariane_axi_soc::DataWidth),
-    .WID_WIDTH(ariane_soc::IdWidthSlave),
-    .RID_WIDTH(ariane_soc::IdWidthSlave),
+    .WID_WIDTH(ariane_axi_soc::IdWidthSlave),
+    .RID_WIDTH(ariane_axi_soc::IdWidthSlave),
     .AWUSER_WIDTH(ariane_axi_soc::UserWidth),
     .WUSER_WIDTH(ariane_axi_soc::UserWidth),
     .BUSER_WIDTH(ariane_axi_soc::UserWidth),

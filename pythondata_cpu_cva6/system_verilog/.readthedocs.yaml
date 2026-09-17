@@ -1,0 +1,39 @@
+# Configuration file for ReadTheDocs, used to render the CVA6
+# User Manual to https://docs.openhwgroup.org/projects/cva6-user-manual.
+# SPDX-License-Identifier:Apache-2.0 WITH SHL-2.1
+
+version: 2
+
+submodules:
+  include:
+    - docs/riscv-isa/riscv-isa-manual
+  recursive: true
+
+build:
+  os: "ubuntu-20.04"
+  tools:
+    python: "3.9"
+    nodejs: "20"
+    ruby: "3.3"
+  apt_packages:
+    - cmake
+    - bison
+    - flex
+    - libpango1.0-dev
+    - libgdk-pixbuf2.0-0
+    - libgtk2.0-dev
+  jobs:
+    post_install:
+      - npm install docs/riscv-isa/riscv-isa-manual/dependencies
+      - gem install -g docs/riscv-isa/riscv-isa-manual/dependencies/Gemfile
+    pre_build:
+      - PATH=$PWD/node_modules/.bin:$PATH make -C docs prepare
+
+# Build from the docs directory with Sphinx
+sphinx:
+  configuration: docs/conf.py
+
+# Explicitly set the Python requirements
+python:
+  install:
+    - requirements: docs/requirements.txt

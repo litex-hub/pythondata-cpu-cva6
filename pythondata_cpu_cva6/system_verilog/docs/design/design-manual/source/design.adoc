@@ -1,0 +1,71 @@
+////
+   Copyright (c) 2022 Thales
+   Licensed under the Solderpad Hardware Licence, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   SPDX-License-Identifier: Apache-2.0 WITH SHL-2.0
+   You may obtain a copy of the License at https://solderpad.org/licenses/
+
+   Original Author: Jean-Roch COULON - Thales
+////
+
+include::config.adoc[]
+include::config_define.adoc[]
+
+ifeval::[{SuperscalarEn} == true]
+:ifetch-len: 64
+:instr-per-fetch: 4
+:issue-width: 2
+:commit-width: 2
+endif::[]
+ifeval::[{SuperscalarEn} == false]
+:ifetch-len: 32
+:instr-per-fetch: 2
+:issue-width: 1
+:commit-width: {NrCommitPorts}
+endif::[]
+:SpeculativeSb: {SuperscalarEn}
+
+:FpPresent: false
+ifeval::[{RVF} == true]
+:FpPresent: true
+endif::[]
+ifeval::[{RVD} == true]
+:FpPresent: true
+endif::[]
+ifeval::[{XF16} == true]
+:FpPresent: true
+endif::[]
+ifeval::[{XF16ALT} == true]
+:FpPresent: true
+endif::[]
+ifeval::[{XF8} == true]
+:FpPresent: true
+endif::[]
+
+[[DesignDocument]]
+= Design Documentation for {ohg-config} architecture
+:description: Design documentation for {ohg-config}
+:company: THALES
+:doctype: book
+:sectnums:
+:sectnumlevels: 5
+:toc: left
+:toclevels: 4
+:table-caption: Table
+:figure-caption: Figure
+:xrefstyle: short
+:imagesdir: images
+:example-caption: Example
+:listing-caption: Listing
+:chapter-refsig: Chapter
+:section-refsig: Section
+:appendix-refsig: Appendix
+:data-uri:
+
+Editor: *Jean Roch Coulon*
+
+include::intro.adoc[]
+include::subsystem.adoc[]
+include::functionality.adoc[]
+include::architecture.adoc[]
+include::glossary.adoc[]
